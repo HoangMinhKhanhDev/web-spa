@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giỏ Hàng & Thanh Toán – Thảnh Thơi Farm</title>
+  <meta name="description" content="Thanh toán đơn hàng Thảnh Thơi Farm – hỗ trợ COD, chuyển khoản, MoMo, ZaloPay." />
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Thảnh Thơi Farm" />
+  <meta property="og:title" content="Thanh Toán An Toàn – Thảnh Thơi Farm" />
+  <meta property="og:description" content="Thanh toán nhanh chóng và bảo mật với nhiều hình thức: COD, chuyển khoản, ví điện tử." />
+  <meta property="og:image" content="assets/hero_lifestyle_premium_1773483645776.png" />
+  <meta name="twitter:card" content="summary" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@0.473.0/dist/umd/lucide.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mint: { DEFAULT: 'hsl(158, 39%, 52%)', dark: 'hsl(158, 39%, 38%)', light: 'hsl(158, 39%, 96%)' },
+            sage: { DEFAULT: 'hsl(158, 25%, 18%)', dark: 'hsl(158, 25%, 12%)', light: 'hsl(158, 20%, 95%)' },
+            gold: { DEFAULT: 'hsl(45, 35%, 60%)', light: 'hsl(45, 35%, 85%)' },
+            ink: { DEFAULT: 'hsl(158, 25%, 12%)', light: 'hsl(0, 0%, 45%)' },
+            cream: 'hsl(45, 40%, 97%)',
+            canvas: 'hsl(45, 40%, 97%)',
+          },
+          fontFamily: { 
+            sans: ['Outfit', 'sans-serif'], 
+            serif: ['Playfair Display', 'serif'] 
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: 'Outfit', sans-serif; background-color: var(--clr-canvas); }
+    .btn-checkout { background: var(--clr-ink); color: #fff; font-weight: 600; border-radius: 100px; padding: 16px 32px; transition: all .4s; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; }
+    .btn-checkout:hover:not(:disabled) { background: var(--clr-mint); box-shadow: var(--shadow-premium); transform: translateY(-2px); }
+    
+    .btn-mint, .btn-pink { background: var(--clr-ink); color: #fff; font-weight: 600; border-radius: 100px; transition: all .4s; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; }
+    .btn-mint:hover:not(:disabled), .btn-pink:hover:not(:disabled) { background: var(--clr-mint); box-shadow: var(--shadow-premium); transform: translateY(-2px); }
+
+    .form-input { width: 100%; padding: 14px 20px; border: 1.5px solid rgba(0,0,0,0.05); border-radius: 16px; font-size: 14px; outline: none; background: white; transition: all 0.3s; }
+    .form-input:focus { border-color: var(--clr-gold); box-shadow: 0 10px 20px rgba(0,0,0,0.02); }
+    
+    .payment-option { border: 2px solid rgba(0,0,0,0.05); border-radius: 20px; padding: 20px; cursor: pointer; transition: all 0.4s; display: flex; align-items: center; gap: 16px; background: white; }
+    .payment-option:hover { border-color: var(--clr-gold); }
+    .payment-option.active { border-color: var(--clr-gold); background: var(--clr-cream); }
+    
+    .step { display: flex; align-items: center; gap: 8px; padding: 10px 24px; border-radius: 100px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.3s; }
+    .step.active { background: var(--clr-mint); color: #fff; }
+    .step.done { background: #D1FAE5; color: #059669; }
+    .step.pending { background: rgba(0,0,0,0.03); color: #9ca3af; }
+
+    .qty-btn { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+    .qty-btn:hover { border-color: var(--clr-gold); color: var(--clr-gold); }
+    .payment-detail{display:none;padding:16px;border-radius:12px;background:#f5fdf9;border:1px solid hsl(158,39%,90%);margin-top:12px;}
+    .payment-detail.show{display:block;animation:fadeIn .3s ease;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:center;justify-content:center;padding:16px;}
+    .modal-overlay.show{display:flex;}
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-gray-50">
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/_shared.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    renderHeader('checkout.html');
+    renderCartItems();
+    prefillUserInfo();
+    if (window.lucide) lucide.createIcons();
+  });
+
+  let shipFee = 25000;
+  let discountAmt = 0;
+  let selectedPayment = 'cod';
+
+  function prefillUserInfo() {
+    const user = Auth.user;
+    if (user) {
+      document.getElementById('s-name').value = user.name || '';
+      document.getElementById('s-email').value = user.email || '';
+    }
+  }
+
+  function renderCartItems() {
+    const items = Cart.items;
+    const list = document.getElementById('cart-items-list');
+    const empty = document.getElementById('cart-empty');
+    const mainContent = document.getElementById('main-checkout');
+    if (!items.length) {
+      list.innerHTML = '';
+      empty.classList.remove('hidden');
+      mainContent.classList.add('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    mainContent.classList.remove('hidden');
+    list.innerHTML = items.map(item => `
+      <div class="flex items-center gap-4 py-4 border-b border-gray-100 last:border-0">
+        <div class="w-16 h-16 rounded-xl flex items-center justify-center text-rose shrink-0" style="background:#FFF0F3;"><i data-lucide="${item.icon||'package'}"></i></div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-gray-800 text-sm mb-1">${item.name}</p>
+          <p class="text-sm font-bold" style="color:hsl(158,39%,52%);">${item.price.toLocaleString()}₫</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="qty-btn" onclick="updateQty(${item.id},-1)">−</button>
+          <span class="w-6 text-center text-sm font-semibold">${item.qty}</span>
+          <button class="qty-btn" onclick="updateQty(${item.id},1)">+</button>
+        </div>
+        <div class="text-right shrink-0 w-24">
+          <p class="font-bold text-sm text-gray-800">${(item.price*item.qty).toLocaleString()}₫</p>
+          <button onclick="removeItem(${item.id})" class="text-xs text-gray-400 hover:text-red-400 mt-1">Xóa</button>
+        </div>
+      </div>`).join('');
+    updateTotals();
+  }
+
+  function updateQty(id, d) {
+    const item = Cart.items.find(i=>i.id===id);
+    if(item) Cart.update(id, item.qty + d);
+    renderCartItems();
+  }
+  function removeItem(id) { Cart.remove(id); renderCartItems(); }
+
+  function updateTotals() {
+    const sub = Cart.total();
+    if (sub >= 200000) shipFee = 0; else shipFee = 25000;
+    const total = sub + shipFee - discountAmt;
+    document.getElementById('sum-subtotal').textContent = sub.toLocaleString()+'₫';
+    document.getElementById('sum-ship').textContent = shipFee === 0 ? 'Miễn phí' : shipFee.toLocaleString()+'₫';
+    document.getElementById('sum-discount').textContent = discountAmt > 0 ? '-' + discountAmt.toLocaleString()+'₫' : '0₫';
+    document.getElementById('sum-total').textContent = Math.max(0, total).toLocaleString()+'₫';
+    document.getElementById('sum-items-count').textContent = Cart.count() + ' sản phẩm';
+    // Free shipping notice
+    const notice = document.getElementById('free-ship-notice');
+    if (sub < 200000) {
+      notice.classList.remove('hidden');
+      notice.querySelector('span').textContent = `Mua thêm ${(200000 - sub).toLocaleString()}₫ để được miễn phí vận chuyển!`;
+    } else {
+      notice.classList.add('hidden');
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function selectPayment(method, el) {
+    selectedPayment = method;
+    document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+    // Show/hide payment details
+    document.querySelectorAll('.payment-detail').forEach(d => d.classList.remove('show'));
+    const detail = document.getElementById(`pay-detail-${method}`);
+    if (detail) detail.classList.add('show');
+  }
+
+  function applyDiscount() {
+    const code = document.getElementById('discount-code').value.trim().toUpperCase();
+    const msg = document.getElementById('discount-msg');
+    if (code === 'THANHTHOI10') {
+      discountAmt = Math.round(Cart.total() * 0.1);
+      msg.innerHTML = '<span class="flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Áp dụng giảm 10% thành công!</span>';
+      msg.className = 'text-xs text-green-600 mt-1';
+    } else if (code === 'FREESHIP') {
+      shipFee = 0;
+      msg.innerHTML = '<span class="flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Miễn phí vận chuyển!</span>';
+      msg.className = 'text-xs text-green-600 mt-1';
+    } else {
+      msg.innerHTML = '<span class="flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> Mã giảm giá không hợp lệ</span>';
+      msg.className = 'text-xs text-red-500 mt-1';
+    }
+    if (window.lucide) lucide.createIcons();
+    updateTotals();
+  }
+
+  async function placeOrder() {
+    if (!Cart.items.length) return alert('Giỏ hàng trống!');
+    const name = document.getElementById('s-name').value;
+    const phone = document.getElementById('s-phone').value;
+    const address = document.getElementById('s-address').value;
+    const email = document.getElementById('s-email').value;
+    if (!name || !phone || !address) return alert('Vui lòng điền đủ thông tin giao hàng!');
+
+    if (!Auth.isLoggedIn()) {
+      alert('Vui lòng đăng nhập để đặt hàng!');
+      window.location.href = 'auth.html';
+      return;
+    }
+
+    const btn = document.getElementById('place-order-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin mr-2 inline-block"></i> Đang xử lý...';
+    if (window.lucide) lucide.createIcons();
+
+    const orderData = {
+      items: Cart.items,
+      totalAmount: Cart.total() + shipFee - discountAmt,
+      paymentMethod: selectedPayment,
+      shippingInfo: { name, phone, address, email }
+    };
+
+    try {
+      const res = await api.post('/orders', orderData);
+      if (res.checkoutUrl) {
+        window.location.href = res.checkoutUrl;
+        return;
+      }
+      if (res.id) {
+        Cart.save([]);
+        if (selectedPayment === 'cod' || selectedPayment === 'bank') {
+          showSuccessModal(res.id, selectedPayment);
+        }
+      } else if (res.error && res.error === 'Unauthorized') {
+        alert('Vui lòng đăng nhập để đặt hàng!');
+        window.location.href = 'auth.html';
+      } else {
+        alert(res.error || 'Có lỗi khi đặt hàng.');
+      }
+    } catch (err) {
+      alert('Lỗi kết nối. Vui lòng thử lại.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="lock" class="w-4 h-4 mr-2 inline-block"></i> Đặt Hàng Ngay';
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+  function showSuccessModal(orderId, method) {
+    const modal = document.getElementById('order-success');
+    document.getElementById('success-order-id').textContent = '#' + String(orderId).padStart(6, '0');
+    
+    const methodInfo = document.getElementById('success-payment-info');
+    if (method === 'cod') {
+      methodInfo.innerHTML = `
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-left">
+          <p class="text-sm font-bold text-yellow-800 mb-1 flex items-center gap-2"><i data-lucide="banknote" class="w-4 h-4"></i> Thanh toán khi nhận hàng</p>
+          <p class="text-xs text-yellow-700">Vui lòng chuẩn bị tiền mặt khi nhận hàng. Shipper sẽ liên hệ trước 30 phút.</p>
+        </div>`;
+    } else if (method === 'bank') {
+      methodInfo.innerHTML = `
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-left">
+          <p class="text-sm font-bold text-blue-800 mb-2 flex items-center gap-2"><i data-lucide="landmark" class="w-4 h-4"></i> Thông tin chuyển khoản</p>
+          <div class="space-y-1 text-xs text-blue-700">
+            <p><strong>Ngân hàng:</strong> Vietcombank</p>
+            <p><strong>STK:</strong> 1234 5678 9012</p>
+            <p><strong>Chủ TK:</strong> THANH THOI FARM</p>
+            <p><strong>Nội dung CK:</strong> DH${String(orderId).padStart(6,'0')}</p>
+          </div>
+          <p class="text-[10px] text-blue-500 mt-2">⏰ Đơn hàng sẽ được xác nhận sau khi chúng tôi kiểm tra giao dịch (thường trong 30 phút).</p>
+        </div>`;
+    } else {
+      methodInfo.innerHTML = `
+        <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 text-left">
+          <p class="text-sm font-bold text-purple-800 mb-1 flex items-center gap-2"><i data-lucide="smartphone" class="w-4 h-4"></i> ${method === 'stripe' ? 'Thanh toán trực tuyến' : 'Ví điện tử'}</p>
+          <p class="text-xs text-purple-700">Thanh toán đã được xác nhận tự động. Đơn hàng đang được xử lý!</p>
+        </div>`;
+    }
+    modal.classList.add('show');
+    if (window.lucide) lucide.createIcons();
+  }
+</script>
+
+<main class="flex-1 max-w-6xl mx-auto w-full px-4 py-8">
+  
+  <!-- Empty Cart -->
+  <div id="cart-empty" class="hidden text-center py-20">
+    <div class="flex justify-center mb-6"><i data-lucide="shopping-cart" class="w-20 h-20 text-gray-200"></i></div>
+    <h2 class="font-display text-2xl font-bold text-gray-800 mb-2">Giỏ hàng trống</h2>
+    <p class="text-gray-500 mb-6">Khám phá sản phẩm Thảnh Thơi Farm và thêm vào giỏ hàng của bạn!</p>
+    <a href="products.html" class="btn-pink px-8 py-3 text-base inline-block">Mua Sắm Ngay</a>
+  </div>
+
+  <div id="main-checkout" class="grid lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 space-y-6">
+      
+      <!-- Progress Steps -->
+      <div class="flex items-center gap-3 mb-2">
+        <div class="step active">1. Giỏ hàng</div>
+        <div class="w-6 h-px bg-gray-300"></div>
+        <div class="step pending">2. Giao hàng</div>
+        <div class="w-6 h-px bg-gray-300"></div>
+        <div class="step pending">3. Thanh toán</div>
+      </div>
+      
+      <!-- Giỏ hàng -->
+      <section class="bg-white rounded-2xl shadow-sm p-6">
+        <h2 class="font-bold text-lg mb-5 flex items-center gap-2"><i data-lucide="shopping-cart" class="w-5 h-5 text-rose"></i> Giỏ Hàng <span class="text-xs bg-pink-light text-pink px-2 py-0.5 rounded-full" id="sum-items-count">0 sản phẩm</span></h2>
+        <div id="cart-items-list" class="space-y-4 mb-5"></div>
+        <!-- Free shipping notice -->
+        <div id="free-ship-notice" class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 flex items-center gap-2 text-xs text-yellow-700">
+          <i data-lucide="truck" class="w-4 h-4"></i> <span>Mua thêm 200.000₫ để được miễn phí vận chuyển!</span>
+        </div>
+      </section>
+
+      <!-- Giao hàng -->
+      <section class="bg-white rounded-2xl shadow-sm p-6">
+        <h2 class="font-bold text-lg mb-5 flex items-center gap-2"><i data-lucide="package" class="w-5 h-5 text-rose"></i> Thông Tin Giao Hàng</h2>
+        <div class="grid sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="text-xs font-semibold text-gray-600 mb-1.5 block">Họ và tên *</label>
+            <input id="s-name" type="text" placeholder="Nguyễn Văn A" class="form-input" required />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600 mb-1.5 block">Số điện thoại *</label>
+            <input id="s-phone" type="tel" placeholder="0912 345 678" class="form-input" required />
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="text-xs font-semibold text-gray-600 mb-1.5 block">Email</label>
+          <input id="s-email" type="email" placeholder="email@example.com" class="form-input" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-600 mb-1.5 block">Địa chỉ giao hàng *</label>
+          <textarea id="s-address" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành" class="form-input resize-none" rows="2" required></textarea>
+        </div>
+      </section>
+
+      <!-- Thanh toán -->
+      <section class="bg-white rounded-2xl shadow-sm p-6">
+        <h2 class="font-bold text-lg mb-5 flex items-center gap-2"><i data-lucide="credit-card" class="w-5 h-5 text-rose"></i> Phương Thức Thanh Toán</h2>
+        <div class="space-y-3">
+          
+          <!-- COD -->
+          <div class="payment-option active" onclick="selectPayment('cod', this)">
+            <input type="radio" name="pay" value="cod" checked class="accent-pink w-4 h-4" />
+            <i data-lucide="banknote" class="w-6 h-6 text-green-600"></i>
+            <div class="flex-1">
+              <span class="text-sm font-semibold block">Thanh toán khi nhận hàng (COD)</span>
+              <span class="text-[11px] text-gray-400">Trả tiền mặt khi shipper giao hàng</span>
+            </div>
+            <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">Phổ biến</span>
+          </div>
+
+          <!-- Stripe -->
+          <div class="payment-option" onclick="selectPayment('stripe', this)">
+            <input type="radio" name="pay" value="stripe" class="accent-pink w-4 h-4" />
+            <i data-lucide="credit-card" class="w-6 h-6 text-purple-600"></i>
+            <div class="flex-1">
+              <span class="text-sm font-semibold block">Thẻ tín dụng / Thẻ ghi nợ (Visa, Mastercard)</span>
+              <span class="text-[11px] text-gray-400">Thanh toán qua Stripe bảo mật, an toàn</span>
+            </div>
+            <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold">Quốc tế</span>
+          </div>
+
+          <!-- Bank Transfer -->
+          <div class="payment-option" onclick="selectPayment('bank', this)">
+            <input type="radio" name="pay" value="bank" class="accent-pink w-4 h-4" />
+            <i data-lucide="landmark" class="w-6 h-6 text-blue-600"></i>
+            <div class="flex-1">
+              <span class="text-sm font-semibold block">Chuyển khoản ngân hàng</span>
+              <span class="text-[11px] text-gray-400">Vietcombank, Techcombank, MB Bank... (Thủ công)</span>
+            </div>
+          </div>
+          <div id="pay-detail-bank" class="payment-detail">
+            <div class="flex items-start gap-4">
+              <div class="w-28 h-28 bg-white border-2 border-gray-200 rounded-xl flex items-center justify-center text-rose shrink-0"><i data-lucide="smartphone" class="w-12 h-12"></i></div>
+              <div class="text-xs space-y-1.5">
+                <p class="font-bold text-gray-800 text-sm mb-2">Thông tin chuyển khoản:</p>
+                <p><span class="text-gray-500">Ngân hàng:</span> <strong>Vietcombank</strong></p>
+                <p><span class="text-gray-500">Số TK:</span> <strong>1234 5678 9012</strong></p>
+                <p><span class="text-gray-500">Chủ TK:</span> <strong>THANH THOI FARM</strong></p>
+                <p class="text-pink font-bold">💡 Sẽ xác nhận đơn thủ công sau khi CK</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Sidebar Summary -->
+    <aside class="space-y-6">
+      <div class="bg-white rounded-2xl shadow-sm p-6 sticky top-24">
+        <h2 class="font-bold text-lg mb-5 flex items-center gap-2"><i data-lucide="file-text" class="w-5 h-5 text-rose"></i> Tóm Tắt Đơn Hàng</h2>
+        <div class="space-y-3 text-sm mb-4">
+          <div class="flex justify-between"><span class="text-gray-500">Tạm tính</span><span id="sum-subtotal" class="font-medium">0₫</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Phí vận chuyển</span><span id="sum-ship" class="font-medium">25.000₫</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Giảm giá</span><span id="sum-discount" class="font-medium text-green-600">0₫</span></div>
+          <div class="border-t pt-3 flex justify-between font-bold text-lg text-pink">
+            <span>Tổng cộng</span><span id="sum-total">0₫</span>
+          </div>
+        </div>
+
+        <!-- Discount Code -->
+        <div class="mb-5">
+          <div class="flex gap-2">
+            <input id="discount-code" type="text" placeholder="Mã giảm giá" class="form-input text-sm flex-1" />
+            <button onclick="applyDiscount()" class="px-4 py-2 border-2 border-pink text-pink font-bold text-sm rounded-full hover:bg-pink hover:text-white transition-all shrink-0">Áp dụng</button>
+          </div>
+          <p id="discount-msg" class="text-xs mt-1"></p>
+        </div>
+
+        <button onclick="placeOrder()" id="place-order-btn" class="btn-pink w-full py-4 text-base shadow-lg flex items-center justify-center gap-2">
+          <i data-lucide="lock" class="w-4 h-4"></i> Đặt Hàng Ngay
+        </button>
+        
+        <!-- Trust Signals -->
+        <div class="mt-4 space-y-2">
+          <div class="flex items-center gap-2 text-[10px] text-gray-400"><i data-lucide="shield-check" class="w-3 h-3"></i> Thanh toán bảo mật SSL 256-bit</div>
+          <div class="flex items-center gap-2 text-[10px] text-gray-400"><i data-lucide="refresh-cw" class="w-3 h-3"></i> Đổi trả trong 7 ngày</div>
+          <div class="flex items-center gap-2 text-[10px] text-gray-400"><i data-lucide="phone" class="w-3 h-3"></i> Hỗ trợ 24/7: 1800 1234</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<!-- Success Modal -->
+<div id="order-success" class="modal-overlay">
+  <div class="bg-white rounded-3xl p-10 text-center max-w-md w-full relative" style="animation:fadeIn .4s ease;">
+    <div class="flex justify-center mb-4 text-rose"><i data-lucide="party-popper" class="w-16 h-16"></i></div>
+    <h2 class="font-display text-2xl font-bold text-gray-800 mb-2">Đặt Hàng Thành Công!</h2>
+    <p class="text-gray-500 mb-4">Mã đơn hàng: <span id="success-order-id" class="font-bold text-pink text-lg">#000001</span></p>
+    <div id="success-payment-info" class="mb-6"></div>
+    <div class="flex gap-3 justify-center">
+      <a href="account.html" class="btn-pink px-6 py-2.5 text-sm">Xem Đơn Hàng</a>
+      <a href="index.html" class="px-6 py-2.5 border border-gray-200 rounded-full text-sm text-gray-600 hover:bg-gray-50">Về Trang Chủ</a>
+    </div>
+  </div>
+</div>
+
+<script>renderFooter();</script>
+</body>
+</html>

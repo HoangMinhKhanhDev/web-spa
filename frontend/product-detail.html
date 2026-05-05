@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chi Tiết Sản Phẩm – Thảnh Thơi Farm</title>
+  <meta name="description" content="Xem chi tiết sản phẩm Thảnh Thơi Farm – mô tả đầy đủ, đánh giá thực tế." />
+  <!-- Open Graph (các trang product-detail cần OG động, cài qua JS sau khi load sản phẩm) -->
+  <meta property="og:type" content="product" />
+  <meta property="og:site_name" content="Thảnh Thơi Farm" />
+  <meta id="og-title" property="og:title" content="Sản Phẩm – Thảnh Thơi Farm" />
+  <meta id="og-desc" property="og:description" content="Mỹ phẩm thiên nhiên hữu cơ cao cấp." />
+  <meta id="og-image" property="og:image" content="assets/product_bottle_minimalist_1773483664308.png" />
+  <meta property="og:url" content="https://thanhthoi.farm/products.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@0.473.0/dist/umd/lucide.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mint: { DEFAULT: 'hsl(158, 39%, 52%)', dark: 'hsl(158, 39%, 38%)', light: 'hsl(158, 39%, 96%)' },
+            sage: { DEFAULT: 'hsl(158, 25%, 18%)', dark: 'hsl(158, 25%, 12%)', light: 'hsl(158, 20%, 95%)' },
+            rose: { DEFAULT: 'hsl(158, 39%, 52%)', dark: 'hsl(158, 39%, 38%)', light: 'hsl(158, 39%, 96%)' },
+            gold: { DEFAULT: 'hsl(45, 35%, 60%)', light: 'hsl(45, 35%, 85%)' },
+            ink: { DEFAULT: 'hsl(158, 25%, 12%)', light: 'hsl(0, 0%, 45%)' },
+            cream: 'hsl(45, 40%, 97%)',
+            canvas: 'hsl(45, 40%, 97%)',
+          },
+          fontFamily: { 
+            sans: ['Outfit', 'sans-serif'], 
+            serif: ['Playfair Display', 'serif'] 
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { background-color: var(--clr-canvas); color: var(--clr-ink); padding-bottom: 80px; }
+    .sticky-gallery { position: sticky; top: 140px; }
+    .gallery-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(0,0,0,0.1); transition: all 0.3s; cursor: pointer; }
+    .gallery-dot.active { background: var(--clr-gold); transform: scale(1.5); }
+    
+    .ingredient-card { background: white; border: 1px solid rgba(0,0,0,0.03); padding: 32px; border-radius: 40px; transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1); }
+    .ingredient-card:hover { transform: translateY(-12px); box-shadow: var(--shadow-premium); border-color: var(--clr-gold); }
+    
+    .tab-trigger { position: relative; padding: 16px 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: var(--clr-sage); opacity: 0.4; transition: all 0.4s; cursor: pointer; }
+    .tab-trigger.active { opacity: 1; color: var(--clr-mint); }
+    .tab-trigger.active::after { content: ''; position: absolute; bottom: 0; left: 0; width: 40px; height: 2px; background: var(--clr-mint); }
+
+    .btn-qty { width: 48px; height: 48px; border-radius: 24px; border: 1.5px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+    .btn-qty:hover { border-color: var(--clr-gold); color: var(--clr-gold); }
+
+    .spec-item { display: flex; justify-content: space-between; padding: 20px 0; border-bottom: 1px solid rgba(0,0,0,0.03); }
+    .spec-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: var(--clr-sage); opacity: 0.3; }
+    .spec-value { font-family: 'Playfair Display', serif; font-style: italic; font-size: 16px; color: var(--clr-sage); }
+    
+    .sticky-buy-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); border-top: 1px solid rgba(0,0,0,0.05); padding: 16px 24px; z-index: 150; transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1); box-shadow: 0 -20px 40px rgba(0,0,0,0.05); }
+    .sticky-buy-bar.show { transform: translateY(0); }
+  </style>
+
+</head>
+<body class="flex flex-col antialiased">
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/_shared.js"></script>
+<script>
+  let PRODUCT = null, selectedVariant = null, qty = 1;
+
+  async function init() {
+    renderHeader('product-detail.html');
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    const slug = params.get('slug');
+    const idOrSlug = slug || id;
+    
+    if (!idOrSlug) { location.href = 'products.html'; return; }
+    try {
+      PRODUCT = await api.get(`/products/${idOrSlug}`);
+      renderPage();
+      initStickyScroll();
+      initZoom();
+    } catch (err) {
+      document.getElementById('pdp-content').innerHTML = '<div class="py-40 text-center opacity-30 italic font-serif text-2xl">Sản phẩm không tồn tại...</div>';
+    }
+    renderFooter();
+  }
+
+  function renderPage() {
+    document.querySelectorAll('.p-name').forEach(el => el.textContent = PRODUCT.name);
+    
+    // Breadcrumbs hierarchy
+    const bc = document.getElementById('p-breadcrumbs');
+    bc.innerHTML = `<a href="index.html" class="hover:text-mint transition-colors">Trang Chủ</a>`;
+    if (PRODUCT.categoryRef) {
+      let cat = PRODUCT.categoryRef;
+      let path = [];
+      while(cat) {
+        path.unshift(cat);
+        cat = cat.parent;
+      }
+      path.forEach(c => {
+        bc.innerHTML += `
+          <i data-lucide="chevron-right" class="w-3 h-3 opacity-20"></i>
+          <a href="products.html?cat=${encodeURIComponent(c.name)}&categoryId=${c.id}" class="hover:text-mint transition-colors">${c.name}</a>
+        `;
+      });
+    } else {
+      bc.innerHTML += `
+        <i data-lucide="chevron-right" class="w-3 h-3 opacity-20"></i>
+        <span class="text-gray-400">${PRODUCT.category}</span>
+      `;
+    }
+    bc.innerHTML += `
+      <i data-lucide="chevron-right" class="w-3 h-3 opacity-20"></i>
+      <span class="text-sage opacity-100 truncate max-w-[200px]">${PRODUCT.name}</span>
+    `;
+
+    document.getElementById('p-cat').textContent = PRODUCT.category;
+    document.getElementById('p-shortdesc').textContent = PRODUCT.shortDesc || PRODUCT.description || 'Sản phẩm hữu cơ cao cấp, tinh khiết và an toàn.';
+    
+    // Price
+    renderPrice(PRODUCT.price, PRODUCT.salePrice);
+
+    // Gallery
+    if (PRODUCT.images?.length) {
+      document.getElementById('main-image').src = PRODUCT.images[0].url;
+      renderGalleryDots(PRODUCT.images.map(i => i.url));
+    }
+
+    // Video tab
+    if (PRODUCT.videoUrl) {
+      document.getElementById('video-tab-btn').classList.remove('hidden');
+      const vidPanel = document.getElementById('tab-panel-3');
+      const isYt = PRODUCT.videoUrl.includes('youtube.com') || PRODUCT.videoUrl.includes('youtu.be');
+      if (isYt) {
+        let vId = PRODUCT.videoUrl.includes('v=') ? PRODUCT.videoUrl.split('v=')[1].split('&')[0] : PRODUCT.videoUrl.split('/').pop();
+        vidPanel.innerHTML = `<iframe class="w-full aspect-square rounded-[64px] shadow-premium" src="https://www.youtube.com/embed/${vId}" frameborder="0" allowfullscreen></iframe>`;
+      } else {
+        vidPanel.innerHTML = `<video src="${PRODUCT.videoUrl}" controls class="w-full rounded-[64px] shadow-premium"></video>`;
+      }
+    }
+
+    // Details/Story
+    document.getElementById('tab-panel-0').innerHTML = `<div class="prose max-w-none text-sage/70 font-light">${PRODUCT.detailDesc || PRODUCT.description || 'Đang cập nhật câu chuyện thảo mộc...'}</div>`;
+    
+    // Usage
+    document.getElementById('tab-panel-1').innerHTML = `<div class="p-12 rounded-[48px] bg-cream/50 border border-gold/5 italic text-sage/80">${PRODUCT.usageInstructions || 'Dùng một lượng vừa đủ massage nhẹ nhàng trên vùng da/tóc cần chăm sóc. Rửa lại bằng nước sạch.'}</div>`;
+
+    // Reviews
+    renderReviews();
+
+    // Variants
+    if (PRODUCT.variants?.length && PRODUCT.productAttrs?.length) {
+      renderVariantSelectors();
+    }
+
+    // Wishlist status
+    updateWishlistBtn();
+
+
+    // Variants
+    if (PRODUCT.variants?.length && PRODUCT.productAttrs?.length) {
+      renderVariantSelectors();
+    }
+
+    // Out of stock
+    if (PRODUCT.stock === 0 && !PRODUCT.allowPreorder) {
+      document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.disabled = true;
+        btn.textContent = 'HẾT HÀNG';
+        btn.classList.add('!bg-gray-300', 'cursor-not-allowed');
+      });
+    }
+
+    // SEO meta
+    const finalTitle = PRODUCT.metaTitle || PRODUCT.name + ' – Thảnh Thơi Farm';
+    const finalDesc = PRODUCT.metaDesc || PRODUCT.shortDesc || 'Sản phẩm mỹ phẩm thiên nhiên từ Thảnh Thơi Farm.';
+    const finalImg = PRODUCT.images?.[0]?.url || window.location.origin + '/assets/hero_lifestyle_premium_1773483645776.png';
+
+    document.title = finalTitle;
+    document.querySelector('meta[name="description"]').setAttribute('content', finalDesc);
+    
+    // OG Tags
+    document.getElementById('og-title').setAttribute('content', finalTitle);
+    document.getElementById('og-desc').setAttribute('content', finalDesc);
+    document.getElementById('og-image').setAttribute('content', finalImg);
+    document.querySelector('meta[property="og:url"]').setAttribute('content', window.location.href);
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function renderPrice(price, salePrice) {
+    const hasSale = salePrice && salePrice < price;
+    const percent = hasSale ? Math.round((1 - salePrice / price) * 100) : 0;
+    
+    document.querySelectorAll('.p-price-block').forEach(el => {
+      el.innerHTML = hasSale
+        ? `<div class="flex flex-col gap-2">
+            <span class="line-through text-gray-300 text-2xl font-light">${price.toLocaleString()}₫</span> 
+            <div class="flex items-center gap-6">
+              <span class="font-serif text-6xl italic text-mint-dark font-medium">${salePrice.toLocaleString()}₫</span>
+              <span class="bg-gold text-white text-[10px] font-bold px-4 py-1.5 rounded-full">-${percent}%</span>
+            </div>
+           </div>`
+        : `<span class="font-serif text-6xl italic text-sage font-medium tracking-tight">${price.toLocaleString()}₫</span>`;
+    });
+
+    document.querySelectorAll('.p-price-mini').forEach(el => {
+      el.innerHTML = hasSale 
+        ? `<span class="line-through text-gray-400 text-xs mr-2">${price.toLocaleString()}</span> <span>${salePrice.toLocaleString()}₫</span>` 
+        : `<span>${price.toLocaleString()}₫</span>`;
+    });
+  }
+
+  function renderGalleryDots(urls) {
+    document.getElementById('gallery-dots').innerHTML = urls.map((url, i) => `
+      <div class="gallery-dot ${i===0?'active':''}" onclick="setMainImage('${url}', this)"></div>
+    `).join('');
+  }
+
+  function setMainImage(url, el) {
+    document.getElementById('main-image').src = url;
+    document.getElementById('sticky-img').src = url;
+    document.querySelectorAll('.gallery-dot').forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+  }
+
+  function renderVariantSelectors() {
+    const container = document.getElementById('variant-selectors');
+    container.innerHTML = '';
+    PRODUCT.productAttrs.forEach(pa => {
+      const attr = pa.attribute;
+      const vals = attr.values;
+      container.innerHTML += `
+        <div class="space-y-6">
+          <h4 class="text-[10px] font-bold uppercase tracking-[0.4em] text-gold">${attr.name}:</h4>
+          <div class="flex flex-wrap gap-4">
+            ${vals.map(v => {
+              const hasStock = PRODUCT.variants.some(vr => vr.options.some(o => o.valueId === v.id) && vr.stock > 0);
+              return `<button class="pill-selector !rounded-full py-4 px-10 ${hasStock ? '' : 'disabled'}" onclick="selectVariantOption(${attr.id}, ${v.id}, this)" data-attr="${attr.id}" data-val="${v.id}">${v.value}</button>`;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  let selectedOptions = {};
+  function selectVariantOption(attrId, valId, el) {
+    selectedOptions[attrId] = valId;
+    document.querySelectorAll(`[data-attr="${attrId}"]`).forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    const match = PRODUCT.variants.find(v => {
+      return Object.entries(selectedOptions).every(([aid, vid]) =>
+        v.options.some(o => o.attributeId === parseInt(aid) && o.valueId === vid)
+      );
+    });
+    if (match) {
+      selectedVariant = match;
+      if (match.price) renderPrice(PRODUCT.price, match.price);
+      if (match.imageUrl) setMainImage(match.imageUrl);
+    }
+  }
+
+  function initZoom() {
+    const container = document.getElementById('main-gallery-container');
+    const img = document.getElementById('main-image');
+    if (!container || !img) return;
+    container.addEventListener('mousemove', e => {
+      const rect = container.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      img.style.transformOrigin = `${x}% ${y}%`;
+      img.style.transform = 'scale(2)';
+    });
+    container.addEventListener('mouseleave', () => { 
+      img.style.transform = 'scale(1)'; 
+      img.style.transformOrigin = 'center center'; 
+    });
+  }
+
+  function initStickyScroll() {
+    const trigger = document.getElementById('add-to-cart-trigger');
+    const sticky = document.getElementById('sticky-bar');
+    if (!trigger || !sticky) return;
+    window.addEventListener('scroll', () => {
+      if (trigger.getBoundingClientRect().top < 0) sticky.classList.add('show');
+      else sticky.classList.remove('show');
+    });
+  }
+
+  function changeQty(d) { 
+    qty = Math.max(1, qty + d); 
+    document.querySelectorAll('.qty-val').forEach(el => el.textContent = qty); 
+  }
+
+  function addToCart() {
+    const item = {
+      id: PRODUCT.id,
+      name: PRODUCT.name,
+      price: selectedVariant?.price || PRODUCT.salePrice || PRODUCT.price,
+      image: selectedVariant?.imageUrl || PRODUCT.images?.[0]?.url,
+      slug: PRODUCT.slug,
+      variantId: selectedVariant?.id,
+      variantLabel: selectedVariant?.options?.map(o => o.value.value).join(' / ')
+    };
+    for(let i=0; i<qty; i++) Cart.add(item);
+  }
+
+  async function toggleWishlist() {
+    if (!Auth.isLoggedIn()) { Toast.error('Vui lòng đăng nhập để lưu sản phẩm yêu thích.'); return; }
+    try {
+      const isWishlisted = PRODUCT.isWishlisted; // This would need to be checked from a local state or API
+      if (PRODUCT.isWishlisted) {
+        await api.delete(`/wishlist/${PRODUCT.id}`);
+        PRODUCT.isWishlisted = false;
+        Toast.success('Đã xóa khỏi danh sách yêu thích');
+      } else {
+        await api.post(`/wishlist/${PRODUCT.id}`);
+        PRODUCT.isWishlisted = true;
+        Toast.success('Đã thêm vào danh sách yêu thích');
+      }
+      updateWishlistBtn();
+    } catch (e) { Toast.error('Không thể thực hiện thao tác.'); }
+  }
+
+  async function updateWishlistBtn() {
+    const btn = document.getElementById('wishlist-btn');
+    if (!btn) return;
+    btn.innerHTML = PRODUCT.isWishlisted 
+      ? `<i data-lucide="heart" class="w-6 h-6 fill-rose text-rose"></i>` 
+      : `<i data-lucide="heart" class="w-6 h-6 text-sage"></i>`;
+    if(window.lucide) lucide.createIcons();
+  }
+
+  function renderReviews() {
+    const container = document.getElementById('tab-panel-2');
+    const reviews = PRODUCT.reviews || [];
+    
+    let html = `
+      <div class="space-y-12">
+        <div class="grid md:grid-cols-2 gap-12">
+          ${reviews.length ? reviews.map(r => `
+            <div class="p-10 bg-white rounded-[40px] shadow-soft border border-sage/5">
+              <div class="flex text-gold mb-4">
+                ${Array(5).fill(0).map((_, i) => `<i data-lucide="star" class="w-3 h-3 ${i < r.rating ? 'fill-gold' : 'text-gray-200'}"></i>`).join('')}
+              </div>
+              <p class="text-sage/70 italic mb-6">"${r.comment}"</p>
+              <p class="text-[10px] font-bold uppercase tracking-widest text-sage">${r.user?.name || 'Ẩn danh'}</p>
+            </div>
+          `).join('') : '<p class="text-sage/40 italic">Chưa có đánh giá nào cho sản phẩm này.</p>'}
+        </div>
+
+        <div class="pt-16 border-t border-sage/5">
+          <h4 class="font-serif text-3xl italic text-sage mb-8">Chia sẻ trải nghiệm của bạn</h4>
+          <form onsubmit="postReview(event)" class="space-y-6 max-w-xl">
+            <div class="flex gap-4 items-center mb-4">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Đánh giá:</p>
+              <div id="rating-input" class="flex gap-2">
+                ${[1,2,3,4,5].map(i => `<i data-lucide="star" onclick="setRating(${i})" class="w-5 h-5 cursor-pointer text-gray-200 hover:text-gold transition-colors star-input" data-rating="${i}"></i>`).join('')}
+              </div>
+            </div>
+            <textarea id="review-comment" required placeholder="Cảm nhận của bạn về sản phẩm..." class="w-full p-8 rounded-[32px] bg-white border border-sage/5 outline-none focus:border-gold h-32 transition-all"></textarea>
+            <button type="submit" class="btn-cta !py-4 px-12">GỬI ĐÁNH GIÁ</button>
+          </form>
+        </div>
+      </div>
+    `;
+    container.innerHTML = html;
+    if(window.lucide) lucide.createIcons();
+  }
+
+  let selectedRating = 5;
+  function setRating(r) {
+    selectedRating = r;
+    document.querySelectorAll('.star-input').forEach((el, i) => {
+      el.classList.toggle('fill-gold', i < r);
+      el.classList.toggle('text-gold', i < r);
+    });
+  }
+
+  async function postReview(e) {
+    e.preventDefault();
+    if (!Auth.isLoggedIn()) { Toast.error('Vui lòng đăng nhập để để lại đánh giá.'); return; }
+    try {
+      const comment = document.getElementById('review-comment').value;
+      await api.post('/reviews', { productId: PRODUCT.id, rating: selectedRating, comment });
+      Toast.success('Cảm ơn bạn đã chia sẻ đánh giá!');
+      // Reload product to show new review
+      init();
+    } catch (err) { Toast.error('Gửi đánh giá thất bại.'); }
+  }
+
+
+  function switchTab(i) {
+    document.querySelectorAll('.tab-trigger').forEach((b,j) => b.classList.toggle('active', i===j));
+    document.querySelectorAll('.tab-panel').forEach((p,j) => p.classList.toggle('hidden', i!==j));
+  }
+
+  window.addEventListener('DOMContentLoaded', init);
+</script>
+
+<main id="pdp-content" class="flex-grow pt-32 pb-40">
+    <div class="max-w-7xl mx-auto px-8">
+      <!-- Breadcrumb -->
+      <nav id="p-breadcrumbs" class="flex items-center gap-4 mb-16 text-[10px] font-bold uppercase tracking-[.3em] text-gray-300 fade-up">
+        <a href="index.html" class="hover:text-mint transition-colors">Trang Chủ</a>
+      </nav>
+
+      <div class="grid lg:grid-cols-2 gap-24 items-start">
+        <!-- Gallery Sticky -->
+        <div class="sticky-gallery space-y-8 fade-up">
+          <div id="main-gallery-container" class="aspect-square bg-white rounded-[64px] overflow-hidden border border-sage/5 relative shadow-soft group">
+             <img id="main-image" src="assets/product_bottle_minimalist_1773483664308.png" class="w-full h-full object-cover transition-transform duration-[1.5s]" />
+             <div class="absolute inset-0 bg-sage/5 pointer-events-none"></div>
+          </div>
+          <div id="gallery-dots" class="flex justify-center gap-6"></div>
+          
+          <!-- Trust Indicators -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 pt-8 md:pt-12">
+            <div class="p-6 md:p-8 rounded-[32px] md:rounded-[40px] bg-cream border border-gold/10 flex items-center gap-4 md:gap-6">
+              <i data-lucide="shield-check" class="w-6 h-6 md:w-8 md:h-8 text-gold shrink-0"></i>
+              <div>
+                <p class="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-gold mb-1">An Toàn</p>
+                <p class="font-serif italic text-sage text-xs md:text-sm">Kiểm định nội bộ</p>
+              </div>
+            </div>
+            <div class="p-6 md:p-8 rounded-[32px] md:rounded-[40px] bg-cream border border-gold/10 flex items-center gap-4 md:gap-6">
+              <i data-lucide="refresh-cw" class="w-6 h-6 md:w-8 md:h-8 text-gold shrink-0"></i>
+              <div>
+                <p class="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-gold mb-1">Đổi Trả</p>
+                <p class="font-serif italic text-sage text-xs md:text-sm">Trong 15 ngày</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="space-y-12 md:space-y-16 lg:pl-12">
+          <div class="stagger-in">
+            <div class="flex items-center gap-4 mb-6 md:mb-8">
+              <span id="p-cat" class="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.5em] text-gold">Category</span>
+              <span class="h-px w-6 md:w-8 bg-gold/30"></span>
+              <div class="flex items-center gap-1">
+                <i data-lucide="star" class="w-3 h-3 fill-gold text-gold"></i>
+                <span class="text-[9px] md:text-[10px] font-bold tracking-widest text-sage">4.9 / 5.0</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-start mb-6 md:mb-8 gap-4">
+              <h1 class="p-name font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight text-sage tracking-tighter italic-serif flex-1">Tên Sản Phẩm</h1>
+              <button id="wishlist-btn" onclick="toggleWishlist()" class="w-12 h-12 md:w-16 md:h-16 shrink-0 rounded-full bg-white shadow-soft flex items-center justify-center hover:scale-110 transition-transform border border-sage/5 mt-2">
+                <i data-lucide="heart" class="w-5 h-5 md:w-6 md:h-6"></i>
+              </button>
+            </div>
+            <p id="p-shortdesc" class="text-sage/60 text-lg md:text-xl font-light leading-relaxed mb-8 md:mb-12">Mô tả ngắn về sản phẩm, tinh hoa kết tinh từ thiên nhiên, an lành cho da và tóc.</p>
+
+            
+            <!-- Case Study Highlights -->
+            <div class="space-y-8 mb-16">
+               <div class="flex items-start gap-6 p-10 bg-white rounded-[40px] border border-sage/5 shadow-soft">
+                  <div class="w-14 h-14 rounded-2xl bg-gold/10 flex items-center justify-center text-gold shrink-0">
+                     <i data-lucide="compass" class="w-7 h-7"></i>
+                  </div>
+                  <div>
+                     <h4 class="font-serif text-2xl italic text-sage mb-2">Hành trình bản địa</h4>
+                     <p class="text-sage/50 text-sm leading-relaxed">Tìm hiểu chi tiết về nguồn gốc 100% thảo mộc được gieo trồng tại Farm.</p>
+                  </div>
+               </div>
+               <div class="flex items-start gap-6 p-10 bg-white rounded-[40px] border border-sage/5 shadow-soft">
+                  <div class="w-14 h-14 rounded-2xl bg-mint/10 flex items-center justify-center text-mint shrink-0">
+                     <i data-lucide="heart-handshake" class="w-7 h-7"></i>
+                  </div>
+                  <div>
+                     <h4 class="font-serif text-2xl italic text-sage mb-2">Lời cam kết Zen</h4>
+                     <p class="text-sage/50 text-sm leading-relaxed">Chúng tôi không bán sản phẩm, chúng tôi tư vấn giải pháp thấu hiểu làn da.</p>
+                  </div>
+               </div>
+            </div>
+
+            <!-- Discovery Actions -->
+            <div class="flex flex-col sm:flex-row items-stretch gap-6 pt-12 border-t border-sage/5">
+              <button onclick="addToCart()" class="btn-cta bg-sage !text-cream flex-grow !py-8 shadow-premium group text-center flex items-center justify-center gap-4">
+                NHẬN TƯ VẤN CHUYÊN SÂU
+                <i data-lucide="message-circle" class="w-6 h-6"></i>
+              </button>
+              <a href="products.html" class="flex-grow sm:flex-none border border-sage text-sage px-12 py-8 rounded-full font-bold text-[10px] tracking-widest uppercase text-center hover:bg-sage hover:text-white transition-all">KHÁM PHÁ TIẾP</a>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="pt-20 border-t border-sage/5">
+             <div class="flex gap-12 mb-12 border-b border-sage/5 overflow-x-auto no-scrollbar">
+               <button class="tab-trigger active shrink-0" onclick="switchTab(0)">01. Câu chuyện</button>
+               <button class="tab-trigger shrink-0" onclick="switchTab(1)">02. Cách dùng</button>
+               <button class="tab-trigger shrink-0" onclick="switchTab(2)">03. Đánh giá</button>
+               <button id="video-tab-btn" class="tab-trigger shrink-0 hidden" onclick="switchTab(3)">04. Video</button>
+             </div>
+             <div id="tab-panels-container">
+               <div id="tab-panel-0" class="tab-panel animate-fadeUp text-sage/60 text-lg font-light leading-relaxed min-h-[150px]"></div>
+               <div id="tab-panel-1" class="tab-panel hidden animate-fadeUp text-sage/60 text-lg font-light leading-relaxed min-h-[150px]"></div>
+               <div id="tab-panel-2" class="tab-panel hidden animate-fadeUp space-y-8 min-h-[150px]"></div>
+               <div id="tab-panel-3" class="tab-panel hidden animate-fadeUp min-h-[150px]"></div>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Section: Clean Ingredients -->
+  <section class="py-40 bg-sage overflow-hidden relative">
+     <div class="max-w-7xl mx-auto px-8 relative z-10">
+        <div class="text-center mb-32 fade-up">
+           <p class="text-[11px] font-bold uppercase tracking-[0.5em] text-gold mb-8">Natural Transparency</p>
+           <h2 class="font-serif text-6xl text-cream italic">Thành phần <span class="italic text-gold italic-serif">Minh Bạch.</span></h2>
+        </div>
+        <div class="grid md:grid-cols-3 gap-12">
+            <div class="ingredient-card bg-white/5 border-white/10 backdrop-blur-xl group hover:bg-white hover:border-white transition-all duration-700 fade-up">
+                <div class="w-16 h-16 rounded-3xl bg-gold/10 flex items-center justify-center text-gold mb-10 group-hover:bg-sage group-hover:text-white transition-colors">
+                  <i data-lucide="droplets" class="w-8 h-8"></i>
+                </div>
+                <h4 class="font-serif text-3xl italic text-cream group-hover:text-sage mb-6">95% Tự nhiên</h4>
+                <p class="text-cream/50 group-hover:text-sage/60 font-light leading-relaxed">Chiết xuất trực tiếp từ vườn thảo mộc hữu cơ Thảnh Thơi Farm.</p>
+            </div>
+            <div class="ingredient-card bg-white/5 border-white/10 backdrop-blur-xl group hover:bg-white hover:border-white transition-all duration-700 fade-up" style="transition-delay: 0.1s">
+                <div class="w-16 h-16 rounded-3xl bg-gold/10 flex items-center justify-center text-gold mb-10 group-hover:bg-sage group-hover:text-white transition-colors">
+                  <i data-lucide="shield-check" class="w-8 h-8"></i>
+                </div>
+                <h4 class="font-serif text-3xl italic text-cream group-hover:text-sage mb-6">Không Độc Hại</h4>
+                <p class="text-cream/50 group-hover:text-sage/60 font-light leading-relaxed">Không Paraben, không hương liệu tổng hợp, tuyệt đối an toàn cho da nhạy cảm.</p>
+            </div>
+            <div class="ingredient-card bg-white/5 border-white/10 backdrop-blur-xl group hover:bg-white hover:border-white transition-all duration-700 fade-up" style="transition-delay: 0.2s">
+                <div class="w-16 h-16 rounded-3xl bg-gold/10 flex items-center justify-center text-gold mb-10 group-hover:bg-sage group-hover:text-white transition-colors">
+                  <i data-lucide="leaf" class="w-8 h-8"></i>
+                </div>
+                <h4 class="font-serif text-3xl italic text-cream group-hover:text-sage mb-6">Zen Essence</h4>
+                <p class="text-cream/50 group-hover:text-sage/60 font-light leading-relaxed">Mỗi sản phẩm là một lời cam kết về sự tĩnh lặng và phục hồi từ sâu bên trong.</p>
+            </div>
+        </div>
+     </div>
+     <div class="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-mint/10 rounded-full blur-[120px]"></div>
+  </section>
+
+<!-- Sticky Buy Bar -->
+<div id="sticky-bar" class="sticky-buy-bar">
+  <div class="max-w-7xl mx-auto flex items-center justify-between gap-6">
+    <div class="hidden lg:flex items-center gap-6">
+      <div class="w-16 h-16 rounded-[20px] bg-cream overflow-hidden border border-sage/5 shadow-inner">
+        <img id="sticky-img" src="assets/product_bottle_minimalist_1773483664308.png" class="w-full h-full object-cover">
+      </div>
+      <div>
+        <h4 class="p-name text-sm font-bold text-sage line-clamp-1">Product Name</h4>
+        <div class="p-price-mini text-gold font-serif italic text-lg">0₫</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-6 flex-1 sm:flex-none">
+      <div class="flex items-center bg-white border border-sage/5 rounded-full p-1.5 shadow-soft">
+        <button onclick="changeQty(-1)" class="w-11 h-11 flex items-center justify-center hover:text-gold transition-colors"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
+        <span class="qty-val w-10 text-center font-bold text-sage">1</span>
+        <button onclick="changeQty(1)" class="w-11 h-11 flex items-center justify-center hover:text-gold transition-colors"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+      </div>
+      <button onclick="addToCart()" class="add-to-cart-btn btn-cta flex-1 sm:w-64 h-14 !py-0 shadow-premium !text-[11px]">THÊM VÀO GIỎ</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thảnh Thơi Farm – Mỹ Phẩm Thiên Nhiên Hữu Cơ Cao Cấp</title>
+  <meta name="description" content="Thảnh Thơi Farm chuyên cung cấp mỹ phẩm thiên nhiên hữu cơ: serum, kem dưỡng, dầu gội thảo dược và các sản phẩm chăm sóc cơ thể an toàn, thân thiện môi trường." />
+  <!-- Open Graph / Facebook / Zalo -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Thảnh Thơi Farm" />
+  <meta property="og:title" content="Thảnh Thơi Farm – Mỹ Phẩm Thiên Nhiên Hữu Cơ" />
+  <meta property="og:description" content="300+ sản phẩm hóa mỹ phẩm thiên nhiên hữu cơ. Không paraben, không hóa chất độc hại. Giao hàng toàn quốc." />
+  <meta property="og:image" content="assets/hero_lifestyle_premium_1773483645776.png" />
+  <meta property="og:url" content="/" /> <!-- CẬP NHẬT DOMAIN THẬT KHI DEPLOY -->
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Thảnh Thơi Farm – Mỹ Phẩm Thiên Nhiên" />
+  <meta name="twitter:description" content="300+ sản phẩm thiên nhiên hữu cơ cao cấp." />
+  <meta name="twitter:image" content="assets/hero_lifestyle_premium_1773483645776.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@0.473.0/dist/umd/lucide.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mint: { DEFAULT: 'hsl(158, 39%, 52%)', dark: 'hsl(158, 39%, 38%)', light: 'hsl(158, 39%, 96%)' },
+            sage: { DEFAULT: 'hsl(158, 25%, 18%)', dark: 'hsl(158, 25%, 12%)', light: 'hsl(158, 20%, 95%)' },
+            rose: { DEFAULT: 'hsl(158, 39%, 52%)', dark: 'hsl(158, 39%, 38%)', light: 'hsl(158, 39%, 96%)' },
+            gold: { DEFAULT: 'hsl(45, 35%, 60%)', light: 'hsl(45, 35%, 85%)' },
+            ink: { DEFAULT: 'hsl(158, 25%, 12%)', light: 'hsl(0, 0%, 45%)' },
+            cream: 'hsl(45, 40%, 97%)',
+            canvas: 'hsl(45, 40%, 97%)',
+          },
+          fontFamily: { 
+            sans: ['Outfit', 'sans-serif'], 
+            serif: ['Playfair Display', 'serif'] 
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { padding-bottom: 80px; }
+    .hero-parallax { transform: translateY(var(--scroll-offset, 0)); transition: transform 0.1s ease-out; }
+    .stagger-in > * { opacity: 0; transform: translateY(20px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+    .stagger-in.visible > * { opacity: 1; transform: translateY(0); }
+    
+    .image-reveal { position: relative; overflow: hidden; }
+    .image-reveal::after { content: ''; position: absolute; inset: 0; background: var(--clr-rose); transform: translateX(-101%); transition: transform 1s cubic-bezier(0.77, 0, 0.175, 1); }
+    .image-reveal.visible::after { transform: translateX(101%); }
+
+    /* Flash Sale Counter UI (Point 4) */
+    .flash-timer { background: var(--clr-ink); color: white; border-radius: 12px; min-width: 60px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--font-serif); font-style: italic; }
+  </style>
+</head>
+<body class="antialiased bg-canvas overflow-x-hidden">
+
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/_shared.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      renderHeader('index.html');
+      init();
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+      }, { threshold: 0.1 });
+      
+      document.querySelectorAll('.fade-up, .stagger-in, .image-reveal').forEach(el => observer.observe(el));
+      
+      window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        document.querySelectorAll('.hero-parallax').forEach(el => {
+          el.style.setProperty('--scroll-offset', scrolled * 0.1 + 'px');
+        });
+      });
+
+      startFlashSaleTimer();
+    });
+
+    async function init() {
+      renderCategories();
+      await fetchFeatured();
+      animateCounters();
+      renderFooter();
+    }
+
+    function startFlashSaleTimer() {
+        let seconds = 3600 * 2.5; // 2.5 hours
+        setInterval(() => {
+            seconds--;
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            document.getElementById('timer-h').textContent = String(h).padStart(2,'0');
+            document.getElementById('timer-m').textContent = String(m).padStart(2,'0');
+            document.getElementById('timer-s').textContent = String(s).padStart(2,'0');
+        }, 1000);
+    }
+
+    function renderCategories() {
+      const cats = [
+        { cat: 'Chăm sóc da', icon: 'sparkles', label: 'Thành Phần Bản Địa', desc: 'Sức mạnh từ thảo mộc tươi.' },
+        { cat: 'Thiết bị Xanh', icon: 'zap', label: 'Giải Pháp Công Nghệ', desc: 'Giao thoa giữa tech & tự nhiên.' },
+        { cat: 'Lối sống Thảnh Thơi', icon: 'coffee', label: 'Nghệ Thuật Sống', desc: 'Vẻ đẹp trong từng hơi thở.' },
+        { cat: 'Thảo dược', icon: 'leaf', label: 'Di Sản Của Đất', desc: 'Gói trọn tinh hoa hữu cơ.' }
+      ];
+      document.getElementById('category-grid').innerHTML = cats.map((c, i) => `
+        <a href="products.html?cat=${c.cat}" class="group block fade-up" style="transition-delay: ${i * 0.1}s">
+          <div class="aspect-square bg-white rounded-[40px] flex items-center justify-center mb-8 shadow-soft border border-sage/5 group-hover:bg-sage group-hover:border-sage transition-all duration-700">
+             <i data-lucide="${c.icon}" class="w-10 h-10 text-gold group-hover:text-gold group-hover:scale-110 transition-all"></i>
+          </div>
+          <div class="text-center">
+            <h3 class="font-serif text-2xl text-sage group-hover:text-mint transition-colors italic mb-2">${c.label}</h3>
+            <p class="text-[9px] uppercase font-bold tracking-[0.2em] text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity">${c.desc}</p>
+          </div>
+        </a>
+      `).join('');
+      if(window.lucide) lucide.createIcons();
+    }
+
+    async function fetchFeatured() {
+      const grid = document.getElementById('featured-grid');
+      grid.innerHTML = Array(4).fill(Skeleton.productCard()).join('');
+      try {
+        const products = await api.get('/products?limit=4&sort=rating');
+
+        document.getElementById('featured-grid').innerHTML = products.map((p, i) => `
+          <a href="product-detail.html?slug=${p.slug}" class="group block fade-up" style="transition-delay: ${i * 0.1}s">
+            <div class="relative aspect-[4/5] overflow-hidden rounded-[48px] bg-white shadow-soft transition-all duration-1000 group-hover:shadow-premium group-hover:-translate-y-4 border border-sage/5">
+              <img src="${p.images?.[0]?.url || 'assets/product_bottle_minimalist_1773483664308.png'}" loading="lazy" class="w-full h-full object-cover group-hover:scale-110 transition-all duration-1000" />
+              <div class="absolute inset-x-8 bottom-8 z-20 translate-y-24 group-hover:translate-y-0 transition-transform duration-700">
+                 <div class="btn-cta w-full !py-5 shadow-premium text-[10px]">TÌM HIỂU THÊM</div>
+              </div>
+              <div class="absolute top-6 right-6 z-20">
+                <div class="w-10 h-10 rounded-full bg-cream/90 backdrop-blur-md flex items-center justify-center text-gold shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                  <i data-lucide="eye" class="w-5 h-5"></i>
+                </div>
+              </div>
+            </div>
+            <div class="mt-10 px-4 text-center">
+                <p class="text-[9px] font-bold uppercase tracking-[0.4em] text-gold mb-3 font-sans">${p.category}</p>
+                <h3 class="font-serif text-2xl text-sage mb-2 group-hover:text-mint transition-colors leading-tight line-clamp-1">${p.name}</h3>
+                <div class="flex items-center justify-center gap-4 mt-4">
+                    <span class="text-[9px] font-bold uppercase tracking-widest text-mint bg-mint/5 px-4 py-1.5 rounded-full">Khám phá câu chuyện</span>
+                </div>
+            </div>
+          </a>
+        `).join('');
+        if(window.lucide) lucide.createIcons();
+      } catch(e) { }
+    }
+
+    function animateCounters() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const el = entry.target;
+            const target = parseInt(el.dataset.count);
+            let current = 0;
+            const timer = setInterval(() => {
+              current += target / 100;
+              if (current >= target) { current = target; clearInterval(timer); }
+              el.textContent = Math.floor(current).toLocaleString() + (el.dataset.suffix || '');
+            }, 20);
+            observer.unobserve(el);
+          }
+        });
+      }, { threshold: 0.5 });
+      document.querySelectorAll('[data-count]').forEach(el => observer.observe(el));
+    }
+  </script>
+
+  <!-- Hero Section: Split-screen Parallax -->
+  <section class="min-h-screen flex items-stretch overflow-hidden relative">
+    <div class="flex-1 flex flex-col justify-center px-10 lg:px-24 py-32 bg-cream relative z-10">
+      <div class="max-w-xl stagger-in visible">
+        <div class="flex items-center gap-4 mb-8">
+          <span class="h-px w-12 bg-mint"></span>
+          <p class="text-[11px] uppercase tracking-[0.6em] font-bold text-sage">Premium Organic Farm • 2026</p>
+        </div>
+        <h1 class="font-serif text-6xl md:text-8xl xl:text-9xl leading-[0.9] text-sage tracking-tighter mb-12">
+          Hương <span class="italic text-gold italic-serif">Thảo</span>,<br/>Vị <span class="font-light text-mint-dark">Lành.</span>
+        </h1>
+        <p class="text-sage/70 text-xl font-light leading-relaxed mb-16">
+          Nơi tinh túy đất trời hội tụ trong từng giọt thảo mộc. Thảnh Thơi Farm nâng niu vẻ đẹp thuần khiết của bạn bằng tất cả sự chân thành và tử tế từ thiên nhiên.
+        </p>
+        <div class="flex flex-wrap gap-8 items-center">
+          <a href="products.html" class="btn-cta px-12">KHÁM PHÁ BỘ SƯU TẬP</a>
+          <a href="#story" class="text-xs font-bold tracking-[0.3em] uppercase border-b border-gold pb-2 hover:text-mint hover:border-mint transition-all">CHUYỆN CỦA FARM</a>
+        </div>
+      </div>
+      <!-- Decorative Elements -->
+      <div class="absolute bottom-12 left-24 hidden lg:block opacity-20">
+        <p class="font-serif italic text-6xl text-sage">Pure Spirit.</p>
+      </div>
+    </div>
+    <div class="flex-1 relative overflow-hidden hidden lg:block">
+      <div class="absolute inset-0 bg-sage/10 mix-blend-multiply z-10"></div>
+      <img src="assets/hero_botanical_luxury.png" class="absolute inset-0 w-full h-full object-cover hero-parallax scale-110" />
+      <div class="absolute bottom-20 left-20 z-20 glass-card p-10 rounded-[40px] animate-fadeUp">
+        <i data-lucide="award" class="w-8 h-8 text-gold mb-4"></i>
+        <h3 class="font-serif text-2xl italic mb-1">Organic Gold 2026</h3>
+        <p class="text-[10px] uppercase font-bold tracking-widest text-gray-400">Chứng nhận hữu cơ tiêu chuẩn quốc tế</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: Philosophy / Manifesto -->
+  <section class="py-32 bg-white relative overflow-hidden">
+    <div class="max-w-4xl mx-auto px-8 text-center relative z-10 fade-up">
+      <p class="text-[11px] font-bold uppercase tracking-[0.5em] text-mint mb-8">Triết Lý Thảnh Thơi</p>
+      <h2 class="font-serif text-4xl md:text-5xl lg:text-7xl leading-tight text-sage mb-12">
+        <span class="italic text-gold">Chăm sóc bản thân</span> không phải là đặc quyền,<br> mà là sự quay về với <span class="text-mint-dark">những điều nguyên bản nhất.</span>
+      </h2>
+      <p class="text-lg text-sage/60 font-light leading-relaxed max-w-2xl mx-auto italic">
+        Tại Thảnh Thơi Farm, chúng mình không chỉ mang đến sản phẩm. Chúng mình mang đến một "liệu pháp nghệ thuật" từ thiên nhiên, được lưu giữ trọn vẹn trong từng giọt tinh chất thu hoạch bằng tay.
+      </p>
+    </div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold/5 rounded-full blur-[100px] -z-10"></div>
+  </section>
+
+  <!-- Section: Hành trình Thảo mộc (Asymmetric Grid) -->
+  <section id="story" class="py-40 bg-canvas">
+    <div class="max-w-7xl mx-auto px-8">
+      <div class="grid lg:grid-cols-12 gap-16 items-center">
+        <div class="lg:col-span-5 space-y-12 fade-up">
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-[0.5em] text-gold mb-6">Ingredient Story</p>
+            <h2 class="font-serif text-6xl leading-tight">Hành Trình <br/><span class="italic text-mint">Của Sự Tận Tâm.</span></h2>
+          </div>
+          <p class="text-lg text-sage/70 font-light leading-relaxed italic">
+            "Chúng mình tin rằng mỗi cánh hoa, mỗi hạt mầm đều mang trong mình một câu chuyện về sự sống. Tại Thảnh Thơi, chúng mình chỉ mượn những gì tinh túy nhất để dâng tặng làn da bạn."
+          </p>
+          <div class="grid grid-cols-2 gap-8 pt-8">
+            <div class="space-y-4">
+              <div class="w-12 h-12 rounded-full bg-cream flex items-center justify-center text-gold"><i data-lucide="wind" class="w-6 h-6"></i></div>
+              <h4 class="font-serif text-xl italic">Bồ Kết Tây Bắc</h4>
+              <p class="text-xs text-gray-400 leading-relaxed uppercase tracking-widest">Nướng vàng hạ thổ, giữ trọn dưỡng chất.</p>
+            </div>
+            <div class="space-y-4">
+              <div class="w-12 h-12 rounded-full bg-cream flex items-center justify-center text-gold"><i data-lucide="leaf" class="w-6 h-6"></i></div>
+              <h4 class="font-serif text-xl italic">Tía Tô Hữu Cơ</h4>
+              <p class="text-xs text-gray-400 leading-relaxed uppercase tracking-widest">Chiết xuất lạnh, giữ nguyên tinh chất tươi.</p>
+            </div>
+          </div>
+        </div>
+        <div class="lg:col-span-7 flex flex-col lg:grid lg:grid-cols-12 lg:grid-rows-6 gap-6 lg:h-[700px]">
+          <div class="lg:col-span-8 lg:row-span-4 h-[300px] lg:h-auto rounded-[32px] lg:rounded-[48px] overflow-hidden shadow-premium fade-up">
+            <img src="assets/ingredients_flatlay.png" class="w-full h-full object-cover hover:scale-110 transition-transform duration-1000" />
+          </div>
+          <div class="lg:col-span-4 lg:row-span-6 rounded-[32px] lg:rounded-[48px] bg-cream flex flex-col justify-end p-8 lg:p-10 space-y-6 fade-up" style="transition-delay: 0.2s">
+            <h3 class="font-serif text-3xl italic text-sage">100% Nguyên liệu sạch.</h3>
+            <p class="text-xs text-sage/50 uppercase tracking-widest leading-loose">Mỗi sản phẩm là một lời cam kết về sự an toàn và minh bạch tuyệt đối.</p>
+            <div class="h-20 w-px bg-gold/30 mx-auto lg:block hidden"></div>
+          </div>
+          <div class="lg:col-span-8 lg:row-span-2 rounded-[32px] lg:rounded-[48px] bg-sage p-8 lg:p-10 flex flex-col sm:flex-row items-center gap-6 lg:gap-10 text-center sm:text-left fade-up" style="transition-delay: 0.4s">
+            <div class="w-16 h-16 lg:w-20 lg:h-20 rounded-full border border-white/10 flex items-center justify-center shrink-0">
+               <i data-lucide="play" class="w-6 h-6 text-gold fill-gold"></i>
+            </div>
+            <div>
+              <h4 class="text-white font-serif text-xl lg:text-2xl italic">Quy trình sản xuất</h4>
+              <p class="text-white/40 text-[10px] uppercase font-bold tracking-[0.3em] mt-2">Xem phim tài liệu ngắn</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ZONE 1: BOTANICAL ESSENCE (Tinh Túy Thảo Mộc)
+       UI: Soft, Organic, Nature-focused
+       ═══════════════════════════════════════ -->
+  <section id="botanical-essence" class="py-40 bg-white relative">
+    <div class="max-w-7xl mx-auto px-8">
+      <div class="flex flex-col lg:flex-row justify-between items-end mb-24 fade-up">
+        <div class="max-w-2xl">
+          <p class="text-[11px] font-bold uppercase tracking-[0.5em] text-mint mb-6">Expert Selections • Core Nature</p>
+          <h2 class="font-serif text-6xl md:text-8xl tracking-tighter text-sage italic">Tinh Túy <br/><span class="text-gold">Từ Đất Mẹ.</span></h2>
+        </div>
+        <p class="text-sage/40 text-sm max-w-xs font-light italic lg:text-right hidden lg:block">Những sản phẩm nguyên bản nhất, được chiết xuất trực tiếp từ khu vườn Thảnh Thơi.</p>
+      </div>
+      <div id="category-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-20"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ZONE 2: MODERN HARMONY (Nhịp Sống Hiện Đại)
+       UI: Minimalist, Tech-Nature, Clean Grid
+       ═══════════════════════════════════════ -->
+  <section id="modern-harmony" class="py-20 lg:py-40 bg-zinc-50 border-y border-zinc-200">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="grid lg:grid-cols-2 gap-16 lg:gap-32 items-center mb-16 lg:mb-32 fade-up">
+        <div>
+           <span class="inline-block px-4 py-1.5 bg-ink text-cream text-[10px] font-bold tracking-[0.3em] uppercase mb-8">Modern Harmony</span>
+           <h2 class="font-sans text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight text-ink mb-8 lg:mb-10 leading-none">Intersections of <br/>Nature & <span class="text-zinc-400">Innovation.</span></h2>
+           <p class="text-base lg:text-lg text-ink/60 font-light leading-relaxed mb-10 lg:mb-12">Nơi công nghệ xanh gặp gỡ hơi thở thảo mộc. Những giải pháp tối giản cho cuộc sống hiện đại bền vững.</p>
+           <a href="products.html?cat=Thiết bị Xanh" class="bg-ink text-white px-8 lg:px-10 py-4 lg:py-5 rounded-none font-bold text-[10px] tracking-widest uppercase hover:bg-zinc-800 transition-all shadow-xl block text-center lg:inline-block">Xem Giải Pháp Công Nghệ</a>
+        </div>
+        <div class="relative aspect-video rounded-2xl overflow-hidden shadow-2xl">
+           <img src="assets/tech_nature_harmony.png" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000" />
+           <div class="absolute inset-0 bg-ink/10"></div>
+        </div>
+      </div>
+      
+      <!-- Mini Tech Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 fade-up">
+         <div class="group bg-white p-8 lg:p-12 border border-zinc-100 hover:border-ink transition-all">
+            <h4 class="text-ink font-bold text-xs lg:text-sm tracking-widest uppercase mb-4">Aromatherapy Tech</h4>
+            <p class="text-zinc-500 text-xs leading-relaxed mb-8">Sản phẩm khuếch tán tinh dầu với công nghệ siêu âm tiết kiệm năng lượng.</p>
+            <i data-lucide="zap" class="w-6 h-6 text-zinc-300 group-hover:text-ink transition-colors"></i>
+         </div>
+         <div class="group bg-white p-8 lg:p-12 border border-zinc-100 hover:border-ink transition-all">
+            <h4 class="text-ink font-bold text-xs lg:text-sm tracking-widest uppercase mb-4">Bio-Materials</h4>
+            <p class="text-zinc-500 text-xs leading-relaxed mb-8">Ứng dụng rơm khô và sợi tự nhiên trong bao bì và thiết bị phong cách sống.</p>
+            <i data-lucide="package" class="w-6 h-6 text-zinc-300 group-hover:text-ink transition-colors"></i>
+         </div>
+         <div class="group bg-white p-8 lg:p-12 border border-zinc-100 hover:border-ink transition-all">
+            <h4 class="text-ink font-bold text-xs lg:text-sm tracking-widest uppercase mb-4">Circular Sourcing</h4>
+            <p class="text-zinc-500 text-xs leading-relaxed mb-8">Quy trình sản xuất khép kín, không rác thải, tôn trọng vòng đời tự nhiên.</p>
+            <i data-lucide="refresh-cw" class="w-6 h-6 text-zinc-300 group-hover:text-ink transition-colors"></i>
+         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ZONE 3: THE LEGACY (Di Sản Của Farm)
+       UI: Heritage, High Contrast, Narrative
+       ═══════════════════════════════════════ -->
+  <section id="legacy" class="py-20 lg:py-40 bg-sage text-cream overflow-hidden relative">
+    <div class="absolute right-0 top-0 opacity-10 pointer-events-none -translate-y-1/2 translate-x-1/3">
+      <h2 class="font-serif italic text-[8rem] md:text-[15rem] lg:text-[30rem] leading-none">Heritage</h2>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+      <div class="flex flex-col lg:flex-row gap-16 lg:gap-32 items-center">
+        <div class="flex-1 space-y-8 lg:space-y-12 fade-up">
+           <div>
+              <p class="text-[11px] font-bold uppercase tracking-[0.5em] text-gold mb-6 lg:mb-8 italic">The Legacy Projects</p>
+              <h2 class="font-serif text-5xl md:text-6xl lg:text-8xl leading-tight">Gìn Giữ <br/><span class="italic text-gold">Những Bản Sắc.</span></h2>
+           </div>
+           <p class="text-lg lg:text-xl text-cream/70 font-light leading-relaxed italic">"Kể về những vườn thảo mộc cổ truyền, những dự án nông nghiệp công nghệ cao và hành trình kết nối cộng đồng tại Thảnh Thơi Farm."</p>
+           <div class="space-y-6 pt-6 lg:pt-10">
+              <a href="consultation.html" class="flex items-center gap-4 lg:gap-6 group">
+                 <div class="w-12 h-12 lg:w-16 lg:h-16 rounded-full border border-gold/30 flex items-center justify-center group-hover:bg-gold group-hover:border-gold transition-all duration-500 shrink-0">
+                    <i data-lucide="book-open" class="w-5 h-5 lg:w-6 lg:h-6 text-gold group-hover:text-sage"></i>
+                 </div>
+                 <div>
+                    <h4 class="font-serif text-xl lg:text-2xl italic tracking-wide">Tour Thăm Quan Farm</h4>
+                    <p class="text-[8px] lg:text-[9px] uppercase font-bold tracking-[0.3em] opacity-40">Trải nghiệm thu hoạch & chưng cất</p>
+                 </div>
+              </a>
+              <a href="consultation.html" class="flex items-center gap-4 lg:gap-6 group">
+                 <div class="w-12 h-12 lg:w-16 lg:h-16 rounded-full border border-gold/30 flex items-center justify-center group-hover:bg-gold group-hover:border-gold transition-all duration-500 shrink-0">
+                    <i data-lucide="users" class="w-5 h-5 lg:w-6 lg:h-6 text-gold group-hover:text-sage"></i>
+                 </div>
+                 <div>
+                    <h4 class="font-serif text-xl lg:text-2xl italic tracking-wide">Cộng Đồng Bền Vững</h4>
+                    <p class="text-[8px] lg:text-[9px] uppercase font-bold tracking-[0.3em] opacity-40">Kết nối các nghệ nhân địa phương</p>
+                 </div>
+              </a>
+           </div>
+        </div>
+        <div class="flex-1 w-full max-w-lg aspect-[3/4] rounded-[40px] lg:rounded-[60px] overflow-hidden shadow-premium fade-up order-first lg:order-last">
+           <img src="assets/farm_legacy_story.png" class="w-full h-full object-cover hover:scale-105 transition-transform duration-1000" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: Tiêu điểm Sản phẩm (Product Spotlight) -->
+  <section class="py-20 lg:py-40 bg-white overflow-hidden relative">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] lg:w-[800px] h-[400px] lg:h-[800px] bg-gold/5 rounded-full blur-[100px] lg:blur-[150px]"></div>
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+      <div class="flex flex-col lg:flex-row items-center gap-16 lg:gap-32">
+        <div class="flex-1 order-2 lg:order-1 fade-up">
+          <p class="text-[11px] font-bold uppercase tracking-[0.5em] text-gold mb-6 lg:mb-8">The Signature Product</p>
+          <h2 class="font-serif text-4xl md:text-5xl lg:text-7xl mb-8 lg:mb-10 leading-tight">Serum <span class="italic text-sage">Hào Quang Sáng.</span></h2>
+          <div class="space-y-8 lg:space-y-10">
+            <div class="flex gap-6 lg:gap-8 group">
+              <div class="w-px h-16 bg-gold/20 group-hover:bg-mint transition-colors duration-500"></div>
+              <div>
+                <h4 class="font-serif text-xl lg:text-2xl italic mb-2">98% Tinh chất Tía Tô</h4>
+                <p class="text-sage/60 font-light leading-relaxed text-sm lg:text-base">Công nghệ ép lạnh độc quyền giúp giữ trọn vẹn các vitamin and khoáng chất có lợi cho việc phục hồi da.</p>
+              </div>
+            </div>
+            <div class="flex gap-6 lg:gap-8 group">
+              <div class="w-px h-16 bg-gold/20 group-hover:bg-mint transition-colors duration-500"></div>
+              <div>
+                <h4 class="font-serif text-xl lg:text-2xl italic mb-2">Dưỡng sáng từ tế bào</h4>
+                <p class="text-sage/60 font-light leading-relaxed text-sm lg:text-base">Không chứa hóa chất tẩy trắng, sản phẩm mang lại vẻ rạng rỡ tự nhiên từ sâu bên trong.</p>
+              </div>
+            </div>
+          </div>
+          <div class="mt-12 lg:mt-16 flex flex-col sm:flex-row items-start sm:items-center gap-6 lg:gap-8">
+            <a href="product-detail.html?slug=serum-hao-quang-sang" class="btn-cta w-full sm:w-auto text-center">HÀNH TRÌNH TIA SÁNG</a>
+            <a href="consultation.html" class="text-[10px] uppercase font-bold tracking-widest text-mint border-b border-mint/30 pb-2 hover:border-mint transition-all">NHẬN TƯ VẤN DA MẶT</a>
+          </div>
+        </div>
+        <div class="flex-1 order-1 lg:order-2 w-full max-w-lg aspect-square relative fade-up">
+           <div class="absolute inset-0 bg-cream rounded-full scale-90 rotate-12 -z-10 border border-gold/5 shadow-soft"></div>
+           <img src="assets/product_spotlight.png" class="w-full h-full object-contain hero-parallax" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Products -->
+  <section class="py-20 lg:py-40 bg-canvas">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-12 mb-16 lg:mb-32 fade-up">
+        <div class="max-w-xl">
+            <p class="text-[11px] font-bold uppercase tracking-[0.5em] text-mint mb-4 lg:mb-6">Expert Selection</p>
+            <h2 class="font-serif text-4xl md:text-6xl lg:text-8xl tracking-tight text-sage leading-none">The <span class="italic text-gold italic-serif">Farm</span> Selection.</h2>
+        </div>
+        <a href="products.html" class="text-[10px] lg:text-xs font-bold tracking-widest text-gray-400 hover:text-mint transition-all flex items-center gap-4">VIEW COLLECTION <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+      </div>
+      <div id="featured-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-16"></div>
+    </div>
+  </section>
+
+  <section class="py-20 lg:py-32 bg-sage text-cream">
+      <div class="max-w-7xl mx-auto px-6 lg:px-8 text-center pb-16 lg:pb-24 fade-up">
+          <h2 class="font-serif text-4xl lg:text-5xl italic text-gold mb-6 lg:mb-8">Triết lý trong từng con số.</h2>
+          <p class="text-[9px] lg:text-[11px] uppercase tracking-[0.4em] opacity-40">Minh bạch • Hiệu quả • Tử tế</p>
+      </div>
+      <div class="max-w-7xl mx-auto px-6 lg:px-8">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-12 lg:gap-20">
+              <div class="text-center fade-up"><p class="font-serif text-5xl lg:text-7xl italic mb-2 lg:mb-4 text-gold" data-count="300" data-suffix="+">0</p><p class="text-[8px] lg:text-[10px] font-bold uppercase tracking-[0.5em] opacity-40">Giải pháp thảo mộc</p></div>
+              <div class="text-center fade-up" style="transition-delay: 0.1s"><p class="font-serif text-5xl lg:text-7xl italic mb-2 lg:mb-4 text-gold" data-count="100" data-suffix="%">0</p><p class="text-[8px] lg:text-[10px] font-bold uppercase tracking-[0.5em] opacity-40">Nguyên liệu sạch</p></div>
+              <div class="text-center fade-up" style="transition-delay: 0.2s"><p class="font-serif text-5xl lg:text-7xl italic mb-2 lg:mb-4 text-gold" data-count="12000" data-suffix="+">0</p><p class="text-[8px] lg:text-[10px] font-bold uppercase tracking-[0.5em] opacity-40">Câu chuyện tin cậy</p></div>
+              <div class="text-center fade-up" style="transition-delay: 0.3s"><p class="font-serif text-5xl lg:text-7xl italic mb-2 lg:mb-4 text-gold" data-count="24" data-suffix="/7">0</p><p class="text-[8px] lg:text-[10px] font-bold uppercase tracking-[0.5em] opacity-40">Đồng hành ZEN</p></div>
+          </div>
+      </div>
+  </section>
+
+</body>
+</html>

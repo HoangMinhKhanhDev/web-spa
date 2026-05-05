@@ -1,0 +1,36 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: thanhthoi-farm-app
+    # port 5000 không cần expose trực tiếp ra ngoài nếu dùng nginx
+    expose:
+      - "5000"
+    volumes:
+      - ./backend/prisma:/app/backend/prisma
+      - ./backend/uploads:/app/backend/uploads
+      - ./backend/logs:/app/backend/logs
+    env_file:
+      - ./backend/.env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./dev.db
+    restart: always
+
+  nginx:
+    image: nginx:alpine
+    container_name: thanhthoi-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./backend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      # - ./certs:/etc/nginx/certs:ro # Mount SSL certs here
+    depends_on:
+      - app
+    restart: always
+
+networks:
+  default:
+    name: thanhthoi-network

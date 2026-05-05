@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tư Vấn Chuyên Sâu – Thảnh Thơi Farm</title>
+  <meta name="description" content="Nhận tư vấn mỹ phẩm thiên nhiên phù hợp từ chuyên gia Thảnh Thơi Farm hoặc chatbot thông minh." />
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Thảnh Thơi Farm" />
+  <meta property="og:title" content="Tư Vấn Chuyên Gia Miễn Phí – Thảnh Thơi Farm" />
+  <meta property="og:description" content="Nhận tư vấn làm đẹp cá nhân hóa từ dược sĩ và AI. Phản hồi trong 30 phút." />
+  <meta property="og:image" content="assets/hero_lifestyle_premium_1773483645776.png" />
+  <meta property="og:url" content="https://thanhthoi.farm/consultation.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@0.473.0/dist/umd/lucide.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mint: { DEFAULT: 'hsl(158, 39%, 52%)', dark: 'hsl(158, 39%, 38%)', light: 'hsl(158, 39%, 96%)' },
+            sage: { DEFAULT: 'hsl(158, 20%, 30%)', dark: 'hsl(158, 20%, 22%)', light: 'hsl(158, 20%, 95%)' },
+            rose: { DEFAULT: 'hsl(158, 39%, 52%)', dark: 'hsl(158, 39%, 38%)', light: 'hsl(158, 39%, 96%)' },
+            ink: { DEFAULT: 'hsl(0, 0%, 15%)', light: 'hsl(0, 0%, 45%)' },
+            parchment: 'hsl(150, 20%, 97%)',
+            canvas: 'hsl(150, 20%, 99%)',
+          },
+          fontFamily: { 
+            sans: ['Outfit', 'sans-serif'], 
+            serif: ['Playfair Display', 'serif'] 
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { background-color: var(--clr-canvas); color: var(--clr-ink); padding-bottom: 80px; }
+    .chat-bubble-bot { background: white; border-radius: 0 32px 32px 32px; border: 1.5px solid rgba(0,0,0,0.03); box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
+    .chat-bubble-user { background: var(--clr-ink); color: white; border-radius: 32px 32px 0 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+    
+    .pill-selector { transition: all 0.3s; cursor: pointer; border: 1.5px solid rgba(0,0,0,0.05); background: white; border-radius: 100px; padding: 12px 24px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+    .pill-selector:hover { border-color: var(--clr-rose); color: var(--clr-rose); }
+    .pill-selector.active { border-color: var(--clr-rose); color: var(--clr-rose); background: var(--clr-rose-light); }
+
+    .input-premium { width: 100%; padding: 18px 28px; border: 1.5px solid rgba(0,0,0,0.03); border-radius: 20px; font-size: 14px; outline: none; transition: all 0.4s; background: white; }
+    .input-premium:focus { border-color: var(--clr-rose); box-shadow: 0 10px 20px rgba(225, 142, 150, 0.05); }
+
+    .tab-trigger { transition: all 0.3s ease; color: #999; border-bottom: 2.5px solid transparent; }
+    .tab-trigger.active { color: var(--clr-ink); border-color: var(--clr-rose); }
+    
+    .typing-dot { width: 6px; height: 6px; background: var(--clr-rose); border-radius: 50%; animation: typing 1.4s infinite; opacity: 0.3; }
+    @keyframes typing { 0%, 100% { transform: translateY(0); opacity: 0.3; } 50% { transform: translateY(-4px); opacity: 1; } }
+  </style>
+</head>
+<body class="flex flex-col antialiased">
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/_shared.js"></script>
+<script>
+  let isChatActive = true;
+
+  function switchMode(mode) {
+    isChatActive = mode === 'chat';
+    document.getElementById('panel-chat').classList.toggle('hidden', !isChatActive);
+    document.getElementById('panel-form').classList.toggle('hidden', isChatActive);
+    document.querySelectorAll('.tab-trigger').forEach((b,i) => b.classList.toggle('active', (i===0 && isChatActive) || (i===1 && !isChatActive)));
+  }
+
+  async function appendBubble(text, role) {
+    const cw = document.getElementById('chat-window');
+    const wrap = document.createElement('div');
+    wrap.className = `flex ${role === 'bot' ? 'justify-start' : 'justify-end'} animate-fadeUp`;
+    wrap.innerHTML = `<div class="${role === 'bot' ? 'chat-bubble-bot' : 'chat-bubble-user'} px-8 py-5 max-w-[85%] text-sm leading-relaxed">${text.replace(/\n/g, '<br/>')}</div>`;
+    cw.appendChild(wrap);
+    cw.scrollTop = cw.scrollHeight;
+  }
+
+  async function botRespond(msg) {
+    const cw = document.getElementById('chat-window');
+    const typing = document.createElement('div');
+    typing.className = 'flex justify-start gap-1.5 p-6 animate-fadeUp';
+    typing.innerHTML = `<div class="typing-dot"></div><div class="typing-dot" style="animation-delay:0.2s"></div><div class="typing-dot" style="animation-delay:0.4s"></div>`;
+    cw.appendChild(typing);
+    cw.scrollTop = cw.scrollHeight;
+
+    await new Promise(r => setTimeout(r, 1200));
+    typing.remove();
+    const response = "Chúng tôi đã ghi nhận yêu cầu của quý khách. Thảnh Thơi Farm sẽ kết nối quý khách với dược sĩ chuyên môn trong giây lát.";
+    await appendBubble(response, 'bot');
+  }
+
+  async function sendMessage() {
+    const inp = document.getElementById('chat-input');
+    const msg = inp.value.trim();
+    if(!msg) return;
+    inp.value = '';
+    await appendBubble(msg, 'user');
+    await botRespond(msg);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    renderHeader('consultation.html');
+    renderFooter();
+    setTimeout(() => appendBubble("Xin chào, tôi là trợ lý Thảnh Thơi. Tôi có thể giúp gì cho liệu trình chăm sóc da của quý khách hôm nay?", 'bot'), 600);
+  });
+</script>
+
+<main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-8 py-16 sm:py-24">
+  <div class="text-center mb-16 sm:mb-24 animate-fadeUp">
+    <h1 class="font-serif text-4xl md:text-6xl lg:text-8xl mb-4 sm:mb-6 leading-tight">Concierge <span class="italic text-rose">Service.</span></h1>
+    <p class="text-xs sm:text-sm font-light text-ink-light uppercase tracking-[0.2em] sm:tracking-[0.4em] max-w-2xl mx-auto">Kiến tạo giải pháp làm đẹp bằng sự tận tâm và dược tính từ đất mẹ.</p>
+  </div>
+
+  <div class="flex flex-wrap justify-center gap-6 sm:gap-12 mb-16 sm:mb-20">
+    <button class="tab-trigger active py-2 sm:py-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em]" onclick="switchMode('chat')">AI Assistant</button>
+    <button class="tab-trigger py-2 sm:py-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em]" onclick="switchMode('form')">Expert Advisor</button>
+  </div>
+
+  <div class="grid lg:grid-cols-12 gap-12 lg:gap-20">
+    <div class="lg:col-span-8 flex flex-col h-[600px] lg:h-[750px] animate-fadeUp" style="animation-delay: 0.2s">
+      <!-- Chat Panel -->
+      <div id="panel-chat" class="flex flex-col h-full bg-white rounded-[32px] lg:rounded-[48px] shadow-premium border border-black/5 overflow-hidden">
+        <div class="p-6 lg:p-10 border-b border-black/5 bg-gray-50/50 flex items-center justify-between">
+            <div class="flex items-center gap-4 lg:gap-6">
+                <div class="w-12 h-12 lg:w-14 lg:h-14 bg-white rounded-2xl flex items-center justify-center text-rose shadow-soft italic font-serif text-xl lg:text-2xl font-bold shrink-0">TT</div>
+                <div>
+                    <h3 class="font-serif text-lg lg:text-xl font-bold">Thảnh Thơi AI</h3>
+                    <p class="text-[8px] lg:text-[9px] uppercase font-extrabold tracking-widest text-green-500 flex items-center gap-2"><span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Botanical Brain</p>
+                </div>
+            </div>
+        </div>
+        <div id="chat-window" class="flex-1 overflow-y-auto p-6 lg:p-12 space-y-6 lg:space-y-10 bg-canvas/30"></div>
+        <div class="p-4 sm:p-8 lg:p-10 bg-white border-t border-black/5">
+            <div class="hidden sm:flex flex-wrap gap-2 lg:gap-4 mb-6 lg:mb-8">
+                <button class="pill-selector !py-2 !px-4 lg:!py-3 lg:!px-6" onclick="appendBubble('Serum thảo mộc', 'user'); botRespond('Serum thảo mộc')">Serum thảo mộc</button>
+                <button class="pill-selector !py-2 !px-4 lg:!py-3 lg:!px-6" onclick="appendBubble('Dầu gội thảo dược', 'user'); botRespond('Dầu gội thảo dược')">Dầu gội thảo dược</button>
+                <button class="pill-selector !py-2 !px-4 lg:!py-3 lg:!px-6" onclick="appendBubble('Mùi hương Sả Chanh', 'user'); botRespond('Mùi hương Sả Chanh')">Mùi hương Sả Chanh</button>
+            </div>
+            <div class="flex items-center gap-3 sm:gap-6">
+                <input id="chat-input" type="text" placeholder="Gõ câu hỏi của bạn tại đây..." class="flex-1 bg-canvas border-none px-6 lg:px-8 py-4 lg:py-6 rounded-[20px] lg:rounded-[24px] text-xs sm:text-sm outline-none" onkeydown="if(event.key==='Enter')sendMessage()" />
+                <button onclick="sendMessage()" class="btn-cta !w-12 !h-12 lg:!w-16 lg:!h-16 !p-0 !min-w-0 !rounded-[20px] lg:!rounded-[24px] shadow-premium"><i data-lucide="send" class="w-4 h-4 lg:w-5 lg:h-5"></i></button>
+            </div>
+        </div>
+      </div>
+
+      <!-- Form Panel -->
+      <div id="panel-form" class="hidden h-full flex flex-col bg-white rounded-[32px] lg:rounded-[48px] shadow-premium border border-black/5 p-6 sm:p-10 lg:p-16 overflow-y-auto scrollbar-hide">
+        <div class="mb-8 lg:mb-12">
+            <h2 class="font-serif text-3xl md:text-5xl mb-4 italic">Boutique Advice.</h2>
+            <p class="text-xs sm:text-sm font-light text-ink-light">Để lại lời nhắn, dược sĩ của chúng tôi sẽ phản hồi trong 30 phút.</p>
+        </div>
+        <form class="space-y-8 lg:space-y-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                <div class="space-y-3"><label class="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-2">Họ tên</label><input type="text" class="input-premium py-4 lg:py-[18px]" placeholder="Your Name" /></div>
+                <div class="space-y-3"><label class="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-2">Số điện thoại</label><input type="tel" class="input-premium py-4 lg:py-[18px]" placeholder="090 XXX XXXX" /></div>
+            </div>
+            <div class="space-y-6">
+                <label class="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-2">Mối quan tâm chính:</label>
+                <div class="flex flex-wrap gap-3 lg:gap-4">
+                    <button type="button" class="pill-selector active !py-2 !px-4 lg:!py-[12px] lg:!px-[24px]" onclick="this.classList.toggle('active')">Chăm sóc da mặt</button>
+                    <button type="button" class="pill-selector !py-2 !px-4 lg:!py-[12px] lg:!px-[24px]" onclick="this.classList.toggle('active')">Dầu gội trị liệu</button>
+                    <button type="button" class="pill-selector !py-2 !px-4 lg:!py-[12px] lg:!px-[24px]" onclick="this.classList.toggle('active')">Serum dưỡng trắng</button>
+                    <button type="button" class="pill-selector !py-2 !px-4 lg:!py-[12px] lg:!px-[24px]" onclick="this.classList.toggle('active')">Hợp tác đại lý</button>
+                </div>
+            </div>
+            <div class="space-y-3"><label class="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-2">Ghi chú thêm</label><textarea rows="4" class="input-premium py-4 lg:py-6 resize-none" placeholder="Hãy mô tả nhu cầu đặc biệt của tổ ấm bạn..."></textarea></div>
+            <button type="button" class="btn-cta w-full shadow-premium py-4 lg:py-[18px]">GỬI YÊU CẦU TƯ VẤN</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Sidebar Info -->
+    <div class="lg:col-span-4 space-y-8 lg:space-y-12">
+        <div class="bg-white p-8 sm:p-12 rounded-[32px] lg:rounded-[48px] shadow-premium border border-black/5 space-y-8 lg:space-y-10 animate-fadeUp" style="animation-delay: 0.4s">
+            <h4 class="text-[10px] font-bold uppercase tracking-[0.4em] text-gray-400 pb-6 border-b">Direct Connect</h4>
+            <div class="space-y-10">
+                <div class="flex items-start gap-8">
+                    <div class="w-14 h-14 bg-rose/10 rounded-2xl flex items-center justify-center text-rose"><i data-lucide="phone"></i></div>
+                    <div><p class="text-[10px] font-bold uppercase tracking-widest text-gray-300 mb-2">Tổng đài 24/7</p><p class="font-serif text-2xl">1800 1234</p></div>
+                </div>
+                <div class="flex items-start gap-8">
+                    <div class="w-14 h-14 bg-sage/10 rounded-2xl flex items-center justify-center text-sage"><i data-lucide="mail"></i></div>
+                    <div><p class="text-[10px] font-bold uppercase tracking-widest text-gray-300 mb-2">Boutique Email</p><p class="text-sm font-medium">hello@thanhthoi.farm</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-ink p-12 rounded-[48px] shadow-premium text-white relative overflow-hidden animate-fadeUp" style="animation-delay: 0.6s">
+            <div class="absolute top-0 right-0 w-40 h-40 bg-rose/10 blur-[60px]"></div>
+            <div class="relative z-10 space-y-8">
+                <div class="w-20 h-20 rounded-[28px] bg-white text-ink flex items-center justify-center font-serif text-3xl font-bold italic">AT</div>
+                <div class="space-y-4">
+                    <h4 class="font-serif text-3xl italic">MSc. Anh Thư</h4>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-rose">Expert Director</p>
+                </div>
+                <p class="text-sm text-gray-400 font-light italic leading-relaxed">"Sự sạch sẽ không chỉ là vẻ ngoài, mà là cảm giác an tâm tuyệt đối trong từng hơi thở tại nhà."</p>
+            </div>
+        </div>
+    </div>
+  </div>
+</main>
+
+<script>
+    if(window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>

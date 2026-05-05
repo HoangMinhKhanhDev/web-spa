@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Danh Sách Yêu Thích – Thảnh Thơi Farm</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@0.473.0/dist/umd/lucide.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mint: 'hsl(158, 39%, 52%)',
+            sage: 'hsl(158, 25%, 18%)',
+            gold: 'hsl(45, 35%, 60%)',
+            cream: 'hsl(45, 40%, 97%)',
+          },
+          fontFamily: { sans: ['Outfit', 'sans-serif'], serif: ['Playfair Display', 'serif'] },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="bg-cream/30 min-h-screen flex flex-col">
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/_shared.js"></script>
+<script>
+  async function init() {
+    renderHeader('wishlist.html');
+    if (!Auth.isLoggedIn()) { location.href = 'auth.html'; return; }
+    await loadWishlist();
+    renderFooter();
+  }
+
+  async function loadWishlist() {
+    try {
+      const items = await api.get('/wishlist');
+      renderItems(items);
+    } catch (err) {
+      Toast.error('Không thể tải danh sách yêu thích');
+    }
+  }
+
+  function renderItems(items) {
+    const grid = document.getElementById('wishlist-grid');
+    if (!items.length) {
+      grid.innerHTML = `
+        <div class="col-span-full py-40 text-center">
+          <div class="flex justify-center mb-8"><i data-lucide="heart" class="w-20 h-20 text-gray-200"></i></div>
+          <h2 class="font-serif text-3xl italic text-sage mb-4">Danh sách trống</h2>
+          <p class="text-sage/50 mb-8">Hãy lưu lại những sản phẩm bạn yêu thích để dễ dàng tìm lại sau nhé!</p>
+          <a href="products.html" class="btn-cta bg-sage !text-cream px-12 inline-block">KHÁM PHÁ SẢN PHẨM</a>
+        </div>
+      `;
+    } else {
+      grid.innerHTML = items.map(item => {
+        const p = item.product;
+        return `
+          <div class="bg-white rounded-[40px] p-8 shadow-soft border border-sage/5 group hover:border-gold transition-all duration-500">
+            <div class="aspect-square rounded-[32px] overflow-hidden mb-6 relative bg-cream/50">
+              <img src="${p.images?.[0]?.url || 'assets/product_bottle_minimalist_1773483664308.png'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+              <button onclick="removeFromWishlist(${p.id})" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow-sm flex items-center justify-center text-rose hover:bg-rose hover:text-white transition-all">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-gold mb-2">${p.category || 'Mỹ phẩm'}</p>
+            <h3 class="font-serif text-2xl italic text-sage mb-4 line-clamp-1">${p.name}</h3>
+            <div class="flex items-center justify-between">
+              <p class="font-bold text-mint">${p.price.toLocaleString()}₫</p>
+              <a href="product-detail.html?slug=${p.slug}" class="text-[10px] font-bold uppercase tracking-widest text-sage border-b border-sage/20 hover:border-sage transition-all">CHI TIẾT</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+
+  async function removeFromWishlist(id) {
+    try {
+      await api.delete(`/wishlist/${id}`);
+      Toast.success('Đã xóa khỏi danh sách yêu thích');
+      loadWishlist();
+    } catch (e) { Toast.error('Không thể xóa.'); }
+  }
+
+  window.addEventListener('DOMContentLoaded', init);
+</script>
+
+<main class="flex-grow pt-32 pb-40">
+  <div class="max-w-7xl mx-auto px-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+      <div>
+        <p class="text-[11px] font-bold uppercase tracking-[0.5em] text-gold mb-6">Your Collection</p>
+        <h1 class="font-serif text-6xl text-sage italic">Sản Phẩm <span class="italic text-mint italic-serif">Yêu Thích.</span></h1>
+      </div>
+    </div>
+
+    <div id="wishlist-grid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <!-- Loading skeleton would go here -->
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

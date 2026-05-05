@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bài Viết – Thảnh Thơi Farm</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@0.473.0/dist/umd/lucide.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mint: 'hsl(158, 39%, 52%)',
+            sage: 'hsl(158, 25%, 18%)',
+            gold: 'hsl(45, 35%, 60%)',
+            cream: 'hsl(45, 40%, 97%)',
+          },
+          fontFamily: { sans: ['Outfit', 'sans-serif'], serif: ['Playfair Display', 'serif'] },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="bg-white min-h-screen flex flex-col">
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/_shared.js"></script>
+<script>
+  async function init() {
+    renderHeader('blog.html');
+    const slug = new URLSearchParams(window.location.search).get('slug');
+    if (!slug) { location.href = 'blog.html'; return; }
+    try {
+      const post = await api.get(`/blog/${slug}`);
+      renderPost(post);
+    } catch (err) {
+      location.href = 'blog.html';
+    }
+    renderFooter();
+  }
+
+  function renderPost(p) {
+    document.title = p.title + ' – Thảnh Thơi Farm';
+    document.getElementById('post-title').textContent = p.title;
+    document.getElementById('post-meta').textContent = `${p.author} • ${new Date(p.createdAt).toLocaleDateString('vi-VN')}`;
+    document.getElementById('post-content').innerHTML = p.content;
+    if (p.imageUrl) document.getElementById('post-hero').src = p.imageUrl;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  window.addEventListener('DOMContentLoaded', init);
+</script>
+
+<main class="flex-grow pt-48 pb-40">
+  <article class="max-w-4xl mx-auto px-8">
+    <div class="text-center mb-16">
+      <p id="post-meta" class="text-[10px] font-bold uppercase tracking-[0.4em] text-gold mb-8"></p>
+      <h1 id="post-title" class="font-serif text-5xl md:text-7xl text-sage italic mb-12 leading-tight"></h1>
+      <img id="post-hero" class="w-full h-auto rounded-[64px] shadow-premium mb-20" src="assets/hero_lifestyle_premium_1773483645776.png" />
+    </div>
+
+    <div id="post-content" class="prose prose-lg max-w-none text-sage/80 font-light leading-relaxed first-letter:text-7xl first-letter:font-serif first-letter:mr-3 first-letter:float-left first-letter:text-mint">
+      <!-- Content loaded via JS -->
+    </div>
+
+    <div class="mt-24 pt-16 border-t border-sage/5 flex justify-between items-center">
+      <a href="blog.html" class="inline-flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-sage hover:text-mint transition-all"><i data-lucide="arrow-left" class="w-4 h-4"></i> QUAY LẠI BLOG</a>
+      <div class="flex gap-4">
+        <button class="w-10 h-10 rounded-full border border-sage/10 flex items-center justify-center text-sage hover:bg-sage hover:text-white transition-all"><i data-lucide="facebook" class="w-4 h-4"></i></button>
+        <button class="w-10 h-10 rounded-full border border-sage/10 flex items-center justify-center text-sage hover:bg-sage hover:text-white transition-all"><i data-lucide="share-2" class="w-4 h-4"></i></button>
+      </div>
+    </div>
+  </article>
+</main>
+
+</body>
+</html>

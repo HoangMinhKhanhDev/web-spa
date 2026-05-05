@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tài Khoản Của Tôi – Thảnh Thơi Farm</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <script>tailwind.config={theme:{extend:{colors:{pink:{DEFAULT:'hsl(158, 48%, 53%)',dark:'hsl(158, 48%, 43%)',light:'hsl(158, 48%, 95%)'}},fontFamily:{sans:['Inter','sans-serif'],display:['Playfair Display','serif']}}}}</script>
+  <style>
+    body { font-family: var(--font-sans); background: var(--color-parchment); color: #2D2D2D; }
+    .font-serif { font-family: var(--font-serif); }
+    .card { background: #fff; border-radius: 0px; border: 1px solid rgba(0,0,0,0.05); padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+    .btn-outline { border: 1px solid #E5E7EB; border-radius: 2px; padding: 10px 24px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; transition: all 0.3s; }
+    .btn-outline:hover { border-color: var(--color-rose); color: var(--color-rose); }
+    .status-badge { padding: 4px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 2px; }
+    .status-pending { background: #FFF9F0; color: #B45309; }
+    .status-shipped { background: #F0F9FF; color: #0369A1; }
+    .status-delivered { background: #F0FDF4; color: #15803D; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-gray-50">
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/_shared.js"></script>
+<script>
+  if (!Auth.user) window.location.href = 'auth.html';
+
+  async function initAccount() {
+    renderHeader('account.html');
+    const user = Auth.user;
+    document.getElementById('user-name').textContent = user.name || 'Khách hàng';
+    document.getElementById('user-email').textContent = user.email;
+
+    try {
+      const orders = await api.get('/orders/my-orders');
+      renderOrders(orders);
+    } catch (err) {
+      console.error(err);
+      document.getElementById('order-list').innerHTML = '<p class="text-gray-400">Không thể tải lịch sử đơn hàng.</p>';
+    }
+    renderFooter();
+  }
+
+  function renderOrders(orders) {
+    const list = document.getElementById('order-list');
+    if (!orders.length) {
+      list.innerHTML = `
+        <div class="text-center py-20">
+          <p class="text-gray-400 mb-8 font-light italic">Bộ sưu tập của bạn đang trống.</p>
+          <a href="products.html" class="btn-premium">Khám phá sản phẩm</a>
+        </div>
+      `;
+      return;
+    }
+    list.innerHTML = orders.map(o => {
+      const items = o.orderItems || [];
+      return `
+        <div class="py-10 border-b border-gray-100 last:border-0">
+          <div class="flex justify-between items-start mb-6">
+            <div>
+              <p class="font-serif text-xl font-bold text-gray-900">Order #${o.id.toString().slice(-4)}</p>
+              <p class="text-[10px] uppercase tracking-widest text-gray-400 mt-1">${new Date(o.createdAt).toLocaleDateString('vi-VN')}</p>
+            </div>
+            <span class="status-badge status-${o.status}">${o.status}</span>
+          </div>
+          <div class="space-y-3">
+            ${items.map(item => `
+              <div class="flex justify-between text-xs font-light tracking-wide">
+                <span class="text-gray-600">${item.name} <span class="text-[10px] text-gray-300 ml-2">× ${item.quantity||1}</span></span>
+                <span class="text-gray-900">${(item.price * (item.quantity||1)).toLocaleString()}₫</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="flex justify-between mt-8 pt-6 border-t border-dashed border-gray-100">
+            <span class="text-[10px] uppercase tracking-widest font-semibold text-gray-400">Total Amount</span>
+            <span class="font-serif text-lg font-bold text-rose">${o.totalAmount.toLocaleString()}₫</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function logout() {
+    Auth.logout();
+    window.location.href = 'index.html';
+  }
+</script>
+
+<main class="flex-1 max-w-4xl mx-auto w-full px-4 py-10">
+  <div class="grid md:grid-cols-3 gap-8">
+    <!-- Sidebar Profile -->
+    <div class="md:col-span-1">
+      <div class="card text-center">
+        <div class="w-24 h-24 rounded-full bg-parchment border border-gray-100 mx-auto mb-6 flex items-center justify-center text-xl font-serif italic text-rose font-bold">
+          ${Auth.user?.name ? Auth.user.name.charAt(0) : 'U'}
+        </div>
+        <h2 id="user-name" class="font-serif text-2xl font-bold text-gray-900 mb-1">---</h2>
+        <p id="user-email" class="text-[10px] uppercase tracking-widest text-gray-400 mb-10">---</p>
+        <button onclick="logout()" class="btn-outline w-full">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Order History -->
+    <div class="md:col-span-2">
+      <div class="card">
+        <h2 class="font-serif text-3xl font-bold text-gray-900 mb-10 border-b border-gray-100 pb-6 uppercase tracking-tight">Lịch sử đơn hàng</h2>
+        <div id="order-list">
+          <p class="text-xs text-gray-400 uppercase tracking-widest italic tracking-widest">Đang tải trữ liệu...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>initAccount();</script>
+</body>
+</html>

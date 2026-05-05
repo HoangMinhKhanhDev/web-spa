@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cửa Hàng – Thảnh Thơi Farm</title>
+  <meta name="description" content="Khám phá bộ sưu tập mỹ phẩm thiên nhiên hữu cơ Thảnh Thơi Farm: serum, kem dưỡng, dầu gội thảo dược, xà bông thủ công." />
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Thảnh Thơi Farm" />
+  <meta property="og:title" content="Shop Mỹ Phẩm Thiên Nhiên – Thảnh Thơi Farm" />
+  <meta property="og:description" content="300+ sản phẩm hóa mỹ phẩm thiên nhiên hữu cơ cao cấp. Skincare, Haircare, Bodycare, Thảo dược." />
+  <meta property="og:image" content="assets/natural_ingredients_flatlay_1773483719561.png" />
+  <meta property="og:url" content="https://thanhthoi.farm/products.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@0.473.0/dist/umd/lucide.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mint: { DEFAULT: 'hsl(158, 39%, 52%)', dark: 'hsl(158, 39%, 38%)', light: 'hsl(158, 39%, 96%)' },
+            sage: { DEFAULT: 'hsl(158, 25%, 18%)', dark: 'hsl(158, 25%, 12%)', light: 'hsl(158, 20%, 95%)' },
+            rose: { DEFAULT: 'hsl(158, 39%, 52%)', dark: 'hsl(158, 39%, 38%)', light: 'hsl(158, 39%, 96%)' },
+            gold: { DEFAULT: 'hsl(45, 35%, 60%)', light: 'hsl(45, 35%, 85%)' },
+            ink: { DEFAULT: 'hsl(158, 25%, 12%)', light: 'hsl(0, 0%, 45%)' },
+            cream: 'hsl(45, 40%, 97%)',
+            canvas: 'hsl(45, 40%, 97%)',
+          },
+          fontFamily: { 
+            sans: ['Outfit', 'sans-serif'], 
+            serif: ['Playfair Display', 'serif'] 
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { background-color: var(--clr-canvas); color: var(--clr-ink); padding-bottom: 80px; }
+    .filter-pill { transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1); cursor: pointer; border: 1.5px solid rgba(0,0,0,0.03); background: white; border-radius: 100px; padding: 12px 24px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: var(--clr-sage); }
+    .filter-pill.active { background: var(--clr-sage) !important; color: white !important; border-color: var(--clr-sage) !important; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    .filter-pill:hover:not(.active) { border-color: var(--clr-gold); color: var(--clr-gold); }
+    
+    .range-premium { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: rgba(0,0,0,0.05); outline: none; border-radius: 2px; }
+    .range-premium::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: white; border: 2px solid var(--clr-gold); cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .range-premium::-webkit-slider-thumb:hover { transform: scale(1.1); background: var(--clr-gold); }
+
+    .product-card-premium { background: white; transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1); border: 1px solid rgba(0,0,0,0.03); position: relative; border-radius: 48px; overflow: hidden; }
+    .product-card-premium:hover { transform: translateY(-16px); box-shadow: var(--shadow-premium); border-color: var(--clr-gold); }
+
+    .reveal-info { position: absolute; inset: 0; background: linear-gradient(to top, var(--clr-sage) 0%, transparent 60%); opacity: 0; transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; z-index: 10; padding: 24px; display: flex; flex-direction: column; justify-content: flex-end; }
+    .product-card-premium:hover .reveal-info { opacity: 1; }
+
+    .skeleton-premium { background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 2s infinite linear; }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--clr-gold); border-radius: 10px; }
+  </style>
+</head>
+<body class="flex flex-col antialiased bg-gray-50/30">
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/_shared.js"></script>
+<script>
+  let PRODUCTS = [];
+  let state = { cat: 'Tất cả', origin: 'Tất cả', intention: 'Tất cả', search: '', sort: 'newest', minPrice: 0, maxPrice: 2000000 };
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('cat')) state.cat = urlParams.get('cat');
+  if (urlParams.get('search')) state.search = urlParams.get('search');
+
+  async function init() {
+    renderHeader('products.html');
+    renderFilters();
+    await fetchProducts();
+    renderFooter();
+  }
+
+  async function fetchProducts() {
+    const grid = document.getElementById('product-grid');
+    grid.innerHTML = Array(6).fill(Skeleton.productCard()).join('');
+
+    try {
+      const params = new URLSearchParams();
+      if (state.categoryId) params.set('categoryId', state.categoryId);
+      else if (state.cat !== 'Tất cả') params.set('category', state.cat);
+      if (state.search) params.set('search', state.search);
+      if (state.sort) params.set('sort', state.sort);
+      params.set('minPrice', state.minPrice);
+      params.set('maxPrice', state.maxPrice);
+      
+      let data = await api.get(`/products?${params.toString()}`);
+      
+      // Client-side filtering for Origin & Intention (Mocking metadata behavior)
+      if (state.origin !== 'Tất cả') {
+        data = data.filter(p => (p.tags && p.tags.includes(state.origin)));
+      }
+      if (state.intention !== 'Tất cả') {
+        data = data.filter(p => (p.tags && p.tags.includes(state.intention)));
+      }
+      
+      PRODUCTS = data;
+      renderGrid();
+    } catch (err) {
+      grid.innerHTML = '<div class="col-span-full py-40 text-center font-serif text-xl opacity-30">Hành trình khám phá tạm gián đoạn...</div>';
+    }
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('product-grid');
+    document.getElementById('result-count').textContent = PRODUCTS.length;
+    
+    if (!PRODUCTS.length) {
+      grid.innerHTML = `<div class="col-span-full py-40 text-center space-y-8">
+        <h3 class="font-serif text-4xl italic text-sage/40">Không tìm thấy mảnh ghép bạn cần...</h3>
+        <button onclick="resetFilters()" class="text-[10px] font-bold tracking-[0.3em] text-gold border-b border-gold/30 uppercase pb-2">Xóa Tất Cả Bộ Lọc</button>
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = PRODUCTS.map(p => {
+      const isOutOfStock = p.stock === 0 && !p.allowPreorder;
+      const imgUrl = p.images?.[0]?.url || 'assets/product_bottle_minimalist_1773483664308.png';
+      const price = p.salePrice || p.price;
+      return `
+      <div class="product-card-premium group ${isOutOfStock ? 'opacity-60' : ''}">
+        ${isOutOfStock ? '<div class="absolute inset-x-0 top-0 z-30 flex items-center justify-center pt-10"><span class="bg-sage text-cream text-[9px] font-bold uppercase tracking-widest px-6 py-3 rounded-full shadow-lg">Liên Hệ Tư Vấn</span></div>' : ''}
+        <a href="product-detail.html?slug=${p.slug}" class="relative block bg-white">
+          <div class="relative aspect-[4/5] overflow-hidden">
+            <img src="${imgUrl}" loading="lazy" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s]" />
+            ${p.badge ? `<span class="absolute top-8 left-8 bg-mint text-cream text-[8px] font-bold uppercase tracking-[.2em] px-4 py-2 rounded-full z-20">${p.badge}</span>` : ''}
+            
+            <div class="reveal-info">
+              <div class="flex items-center gap-2 mb-4">
+                  <div class="flex text-gold"><i data-lucide="sparkles" class="w-3 h-3 fill-gold"></i></div>
+                  <span class="text-[10px] font-bold text-cream/70 uppercase tracking-widest">Tuyệt tác thiên nhiên</span>
+              </div>
+              <div class="btn-cta w-full !py-4 shadow-xl !bg-cream !text-sage text-[10px]">TÌM HIỂU HÀNH TRÌNH</div>
+            </div>
+          </div>
+        </a>
+        <div class="p-10 space-y-4">
+          <div class="text-center">
+              <p class="text-[9px] uppercase font-bold text-gold tracking-[.3em] mb-2">${p.category}</p>
+              <h3 class="font-serif text-2xl text-sage line-clamp-1 group-hover:text-mint transition-colors tracking-tight text-center">${p.name}</h3>
+              <p class="mt-2 text-sage/60 font-bold">${price.toLocaleString()}₫</p>
+          </div>
+          <div class="flex items-center justify-center pt-4 border-t border-sage/5">
+             <span class="text-[9px] font-bold uppercase tracking-[.4em] text-gray-300">Đề xuất bởi Thảnh Thơi Farm</span>
+          </div>
+        </div>
+      </div>
+    `}).join('');
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  async function renderFilters() {
+    const categories = await api.get('/categories');
+    const mainCats = categories.filter(c => !c.parentId);
+
+    document.getElementById('cat-filters').innerHTML = `
+      <button class="filter-pill ${state.cat === 'Tất cả' ? 'active' : ''}" onclick="setCat('Tất cả')">BỐN MÙA THÀNH PHẨM</button>
+      ${mainCats.map(c => `
+        <button class="filter-pill w-full text-left justify-between flex items-center ${state.cat === c.name ? 'active' : ''}" onclick="setCat('${c.name}', ${c.id})">
+            ${c.name}
+        </button>
+      `).join('')}
+    `;
+
+    ['origin', 'intention'].forEach(key => {
+        document.querySelectorAll(`#${key}-filters button`).forEach(btn => {
+            if (btn.dataset.val === state[key]) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+    });
+
+    document.getElementById('price-val').textContent = state.maxPrice.toLocaleString() + '₫';
+    document.getElementById('price-range').value = state.maxPrice;
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function setCat(name, id = null) { state.cat = name; state.categoryId = id; renderFilters(); fetchProducts(); }
+  function setOrigin(val) { state.origin = state.origin === val ? 'Tất cả' : val; renderFilters(); fetchProducts(); }
+  function setIntention(val) { state.intention = state.intention === val ? 'Tất cả' : val; renderFilters(); fetchProducts(); }
+  function setSort(val) { state.sort = val; fetchProducts(); }
+  function setPrice(val) { state.maxPrice = parseInt(val); document.getElementById('price-val').textContent = state.maxPrice.toLocaleString() + '₫'; }
+  function applyPrice() { fetchProducts(); }
+  function resetFilters() { state = { cat: 'Tất cả', origin: 'Tất cả', intention: 'Tất cả', search: '', sort: 'newest', minPrice: 0, maxPrice: 2000000 }; renderFilters(); fetchProducts(); }
+
+  window.addEventListener('DOMContentLoaded', init);
+</script>
+
+<main class="flex-1 max-w-7xl mx-auto w-full px-8 py-24">
+  <div class="flex flex-col lg:flex-row justify-between items-end gap-8 mb-24 fade-up">
+    <div>
+      <h1 class="font-serif text-5xl md:text-7xl mb-4">The <span class="italic text-mint">Collection.</span></h1>
+      <p class="text-sm font-light text-ink-light uppercase tracking-[0.3em]">Pure • Botanical • Essential</p>
+    </div>
+    <div class="flex items-center gap-8">
+      <div class="text-[11px] font-bold text-gray-300 tracking-[0.3em] uppercase">Showing <span id="result-count" class="text-ink">0</span> Items</div>
+      <select onchange="setSort(this.value)" class="bg-transparent border-none text-[10px] font-bold uppercase tracking-widest text-sage outline-none cursor-pointer">
+        <option value="newest">Mới nhất</option>
+        <option value="rating">Yêu thích nhất</option>
+        <option value="price-asc">Giá: Thấp đến Cao</option>
+        <option value="price-desc">Giá: Cao đến Thấp</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="flex flex-col lg:flex-row gap-20">
+    <aside class="lg:w-80 shrink-0 space-y-16">
+      <section class="space-y-8">
+        <h4 class="text-[10px] uppercase font-bold tracking-[0.4em] text-gray-400 pb-4 border-b">Bộ Sưu Tập</h4>
+        <div id="cat-filters" class="flex flex-col gap-4"></div>
+      </section>
+
+      <section class="space-y-8">
+        <h4 class="text-[10px] uppercase font-bold tracking-[0.4em] text-gray-400 pb-4 border-b">Ngân Sách</h4>
+        <div class="space-y-6">
+          <input type="range" id="price-range" min="0" max="2000000" step="50000" oninput="setPrice(this.value)" onchange="applyPrice()" class="range-premium" />
+          <div class="flex justify-between text-[10px] font-bold uppercase tracking-widest text-sage">
+            <span>0₫</span>
+            <span id="price-val" class="text-gold">2,000,000₫</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="space-y-8">
+        <h4 class="text-[10px] uppercase font-bold tracking-[0.4em] text-gray-400 pb-4 border-b">Gốc Rễ (Origin)</h4>
+        <div id="origin-filters" class="flex flex-col gap-3">
+          <button class="filter-pill !justify-start" data-val="100% Thiên nhiên" onclick="setOrigin('100% Thiên nhiên')">100% Thiên nhiên</button>
+          <button class="filter-pill !justify-start" data-val="Chiết xuất tự nhiên" onclick="setOrigin('Chiết xuất tự nhiên')">Chiết xuất tự nhiên</button>
+          <button class="filter-pill !justify-start" data-val="Công nghệ xanh" onclick="setOrigin('Công nghệ xanh')">Công nghệ xanh</button>
+        </div>
+      </section>
+
+      <section class="space-y-8">
+        <h4 class="text-[10px] uppercase font-bold tracking-[0.4em] text-gray-400 pb-4 border-b">Mục Đích (Intention)</h4>
+        <div id="intention-filters" class="flex flex-col gap-3">
+          <button class="filter-pill !justify-start" data-val="Phục hồi" onclick="setIntention('Phục hồi')">Phục hồi (Recovery)</button>
+          <button class="filter-pill !justify-start" data-val="Bảo vệ" onclick="setIntention('Bảo vệ')">Bảo vệ (Protection)</button>
+          <button class="filter-pill !justify-start" data-val="Lối sống" onclick="setIntention('Lối sống')">Lối sống (Lifestyle)</button>
+        </div>
+      </section>
+    </aside>
+
+    <div class="flex-1">
+      <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-12"></div>
+    </div>
+  </div>
+</main>
+
+
+</body>
+</html>

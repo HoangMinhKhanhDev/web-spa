@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+backend/node_modules
+backend/logs
+backend/uploads
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+.env
+.git
+.gitignore
+README.md
